@@ -1,0 +1,5 @@
+generadores.o: generadores.c generadores.h
+neuronaPers.o: neuronaPers.c neuronaPers.h
+practico3-pers.o: practico3-pers.c generadores.h redPerseptron.h
+redPerseptron.o: redPerseptron.c redPerseptron.h neuronaPers.h \
+ generadores.h
