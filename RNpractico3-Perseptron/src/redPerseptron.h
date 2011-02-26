@@ -58,7 +58,7 @@ extern "C" {
      * len(deseado)==rpers_get_num_Out(red)
      * maxErr es el maximo error permtido... (ya vamos a ver en que y donde)
      */
-    void rpers_aprender(rpers_t red, int cantDatos, double** in, double** deseado, int conMomento, metodo aprenderPor);
+    int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento, metodo aprenderPor);
     void rpers_aprender_online(rpers_t red, int cantDatos, double** in, double** deseado, int conMomento);
     void rpers_aprender_batch(rpers_t red, int cantDatos, double** in, double** deseado, int conMomento);
 

@@ -161,13 +161,14 @@ double* cpers_eval(cpers_t cap) {
                 cap->out[i] = -cap->W[i][cap->neuralIn];
                 for (j = 0; j < cap->neuralIn; j++)
                     cap->out[i] = cap->out[i] +(cap->W[i][j] * cap->prevCap->out[j]);
-                cap->delta[i] = dg(cap->out[i], cap->tipo);
+                cap->delta[i] = dg(2.0 * cap->out[i], cap->tipo);
                 /* TODO: Evaluar posibilidad de si es tipo 0
                  * y es la ultima capa, usar out=sig(g)
                  * de lo contrario arreglar el problema de satisfaccion
                  * en el aprendizage a nivel red y no a nivel capa
+                 * TODO: ver que aca el beta es fijo.
                  */
-                cap->out[i] = g(cap->out[i], cap->tipo);
+                cap->out[i] = g(2.0 * cap->out[i], cap->tipo);
             }
         }
         if (cap->nextCap)
@@ -402,46 +403,47 @@ void rpers_aprender_batch(rpers_t red, int cantDatos, double** in, double** dese
  * len(deseado)==rpers_get_num_Out(red)
  * maxErr es el maximo error permtido... (ya vamos a ver en que y donde)
  */
-void rpers_aprender(rpers_t red, int cantDatos, double** in, double** deseado, int conMomento, metodo aprenderPor) {
+int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento, metodo aprenderPor) {
+    int conceptosFaltantes = cantDatos, intRestantes = numDeIntentos, i = 0;
     if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
-        int faltantes = cantDatos, i = 0, fin = 100;
         double **entradas = NULL, **salidas = NULL, *res = NULL;
         entradas = (double**) calloc(cantDatos, sizeof (double*));
         salidas = (double**) calloc(cantDatos, sizeof (double*));
         if (entradas && salidas) {
-            int anteriores = cantDatos;
+            int conceptosFant = cantDatos;
             for (i = 0; i < cantDatos; i++) {
                 entradas[i] = in[i];
                 salidas[i] = deseado[i];
             }
-            while (0 < faltantes && 0 < fin) {
+            while (0 < conceptosFaltantes && 0 < intRestantes) {
                 /** /if (((faltantes == 1 && (anteriores != faltantes)) || fin == 1) && 4 < cantDatos) {
                     char *str = rpers_to_str(red);
                     printf("faltantes: %i\tfin: %i\n", faltantes,fin); 
                     printf("%s", str);
                     free(str);
                 }/ **/
-                /*fin--;*/
+                intRestantes--;
                 switch (aprenderPor) {
                     case online:
-                        rpers_aprender_online(red, faltantes, entradas, salidas, conMomento);
+                        rpers_aprender_online(red, conceptosFaltantes, entradas, salidas, conMomento);
                     default:
-                        rpers_aprender_batch(red, /**/cantDatos/**//** /faltantes/ **/, entradas, salidas, conMomento);
+                        rpers_aprender_batch(red, /** /cantDatos/ **//**/conceptosFaltantes/**/, entradas, salidas, conMomento);
                 }
-                faltantes = 0;
+                conceptosFaltantes = 0;
                 for (i = 0; i < cantDatos; i++) {
                     int j = 0, fail = 0;
                     res = rpers_eval(red, in[i]);
                     for (j = 0; j < rpers_get_num_Out(red) && !fail; j++)
-                        fail |= (.55 < dabs(res[j] - deseado[i][j]));
+                        fail |= (1.0 - (.9 * ((double) intRestantes) / ((double)
+                            numDeIntentos)) < dabs(res[j] - deseado[i][j]));
                     free(res);
                     if (fail) {
-                        /** /entradas[faltantes] = in[i];
-                        salidas[faltantes] = deseado[i]; / **/
-                        faltantes++;
+                        /**/entradas[conceptosFaltantes] = in[i];
+                        salidas[conceptosFaltantes] = deseado[i]; /**/
+                        conceptosFaltantes++;
                     }
                 }/**/
-                for (i = /**/cantDatos/**//** /faltantes/ **/; 0 < i; i--) {
+                for (i = /** /cantDatos/ **//**/conceptosFaltantes/**/; 0 < i; i--) {
                     int r = i * ran2(red->sem);
                     double* tmp = NULL;
                     tmp = entradas[i - 1];
@@ -451,15 +453,16 @@ void rpers_aprender(rpers_t red, int cantDatos, double** in, double** deseado, i
                     salidas[i - 1] = salidas[r];
                     salidas[r] = tmp;
                 }/**/
-                if (faltantes < anteriores && red->nu < .048) {
+                if (conceptosFaltantes < conceptosFant && red->nu < .048) {
                     red->nu = red->nu * 1.0003;
-                } else if (anteriores < faltantes && .025 < red->nu) {
+                } else if (conceptosFant < conceptosFaltantes && .025 < red->nu) {
                     red->nu = red->nu * .96;
                 }/**/
-                anteriores = faltantes;
+                conceptosFant = conceptosFaltantes;
             }
             free(entradas);
             free(salidas);
         }
     }
+    return intRestantes;
 }
