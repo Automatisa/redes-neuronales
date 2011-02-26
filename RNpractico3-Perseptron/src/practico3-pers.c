@@ -70,14 +70,14 @@ int ejer1(int tamIn, int conMomento, int printRN) {
             tot = 0.0;
             mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
             for (j = 0; j < 5000 && ok; j++) {
-                int resto = ((j * p) % totalCombinaciones), fallas = 300;
+                int resto = ((j * p) % totalCombinaciones), numDeIntentos = 300;
                 red = rpers_create(2, numNeuronas, tipoNuronas, NULL, &sem);
                 if (totalCombinaciones <= resto + p)
                     mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
                 if (red) {
                     for (k = 0; k < p; k++)
                         genIn8(i, inEnInt[k + resto], in[k], res[k]);
-                    if (rpers_aprender(red, p, in, res, conMomento, batch)) {
+                    if (rpers_aprender(red, numDeIntentos, p, in, res, conMomento, batch)) {
                         tot = tot + 1.0;
                         genIn8(i, inEnInt[k], in[0], (double*) res[0]);
                         test = rpers_eval(red, in[0]);
@@ -89,7 +89,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                             free(str);
                         }
                         red = rpers_destroy(red);
-                    } else if (fallas < 3100) fallas++3;
+                    } else if (numDeIntentos < 3100) numDeIntentos += 3;
                     else if (ok) ok--;
                 } else printf("OO OOO\n");
             }
