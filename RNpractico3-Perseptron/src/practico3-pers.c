@@ -79,7 +79,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                         genIn8(i, inEnInt[k + resto], in[k], res[k]);
                     if (rpers_aprender(red, numDeIntentos, p, in, res, conMomento, batch)) {
                         tot = tot + 1.0;
-                        genIn8(i, inEnInt[k], in[0], (double*) res[0]);
+                        genIn8(i, inEnInt[k], in[0], res[0]);
                         test = rpers_eval(red, in[0]);
                         if (dabs2(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
                         free(test);

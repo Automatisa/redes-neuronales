@@ -361,21 +361,33 @@ double* rpers_eval(rpers_t red, double* in) {
     return res;
 }
 
-void rpers_aprender_online(rpers_t red, int cantDatos, double** in, double** deseado, int conMomento) {
+void rpers_aprender_online(rpers_t red, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento) {
     if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
-        int key = 1, i = 0;
-
-        while (key) {
-            key = 0;
+        int intRestantes = numDeIntentos, key = 1, i = 0, j = 0;
+        double promErr = 0.0, promErrAnt = 0.0, *res = NULL;
+        for (i = 0; i < cantDatos; i++) {
+            key = 1;
+            intRestantes = numDeIntentos;
             free(rpers_eval(red, in[i]));
-            cpers_apreder(red->last, deseado[i], conMomento, red->nu);
-        }
-        /*
-                if (dabs(red->delta[i]) < dabs(red->lastErr[i]) && red->nu < .06) {
-                    red->nu = red->nu + .0003;
-                } else if (dabs(red->lastErr[i]) < dabs(red->err[i]) && .02 < red->nu) {
+            while (key && 0 < intRestantes) {
+                intRestantes--;
+                promErr = 0.0;
+                cpers_apreder(red->last, deseado[i], conMomento, red->nu);
+                res = rpers_eval(red, in[i]);
+                for (j = 0; j < rpers_get_num_Out(red); j++)
+                    promErr = promErr + dabs(res[j] - deseado[i][j]);
+                promErr = promErr / j;
+                key = (1.0 - (.9 * ((double) intRestantes) / ((double)
+                        numDeIntentos)) < promErr);
+                free(res);
+                if (promErr < promErrAnt && red->nu < .048) {
+                    red->nu = red->nu * 1.0003;
+                } else if (promErrAnt < promErr && .025 < red->nu) {
                     red->nu = red->nu * .91;
-                }*/
+                }
+                promErrAnt = promErr;
+            }
+        }
     }
 }
 
@@ -410,7 +422,7 @@ int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, d
         entradas = (double**) calloc(cantDatos, sizeof (double*));
         salidas = (double**) calloc(cantDatos, sizeof (double*));
         if (entradas && salidas) {
-            int conceptosFant = cantDatos;
+            int concFaltAnt = cantDatos;
             for (i = 0; i < cantDatos; i++) {
                 entradas[i] = in[i];
                 salidas[i] = deseado[i];
@@ -425,7 +437,7 @@ int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, d
                 intRestantes--;
                 switch (aprenderPor) {
                     case online:
-                        rpers_aprender_online(red, conceptosFaltantes, entradas, salidas, conMomento);
+                        rpers_aprender_online(red, intRestantes, conceptosFaltantes, entradas, salidas, conMomento);
                     default:
                         rpers_aprender_batch(red, /** /cantDatos/ **//**/conceptosFaltantes/**/, entradas, salidas, conMomento);
                 }
@@ -453,12 +465,12 @@ int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, d
                     salidas[i - 1] = salidas[r];
                     salidas[r] = tmp;
                 }/**/
-                if (conceptosFaltantes < conceptosFant && red->nu < .048) {
+                if (conceptosFaltantes < concFaltAnt && red->nu < .048) {
                     red->nu = red->nu * 1.0003;
-                } else if (conceptosFant < conceptosFaltantes && .025 < red->nu) {
-                    red->nu = red->nu * .96;
+                } else if (concFaltAnt < conceptosFaltantes && .025 < red->nu) {
+                    red->nu = red->nu * .91;
                 }/**/
-                conceptosFant = conceptosFaltantes;
+                concFaltAnt = conceptosFaltantes;
             }
             free(entradas);
             free(salidas);
