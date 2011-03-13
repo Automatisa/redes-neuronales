@@ -1,4 +1,11 @@
-#include "neuronaPers.h"
+/*
+ * $ Author: Eric Nahuel Jurio $
+ * $ Date: 22/1/2011 19:22 $
+ * $ License: GPL v3 $
+ *
+ */
+
+#include "neuronaPerceptron.h"
 #include <math.h>
 
 double sig(double x);

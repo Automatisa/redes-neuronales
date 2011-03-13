@@ -1,5 +1,14 @@
-#include "redPerseptron.h"
-#include "neuronaPers.h"
+/*
+ * File:   capaPerceptron.c
+ *
+ * $ Author: Eric Nahuel Jurio $
+ * $ Date: 22/1/2011 19:22 $
+ * $ License: GPL v3 $
+ *
+ */
+
+#include "redPerceptron.h"
+#include "neuronaPerceptron.h"
 #include "generadores.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,22 +16,22 @@
 #include <string.h>
 #include <stdarg.h>
 
-typedef struct sCapaPers *cpers_t;
+typedef struct sCapaPerc *cperc_t;
 
-struct sCapaPers {
+struct sCapaPerc {
     int neuralIn, neuralOut, tipo;
-    cpers_t nextCap, prevCap;
+    cperc_t nextCap, prevCap;
     double *out, *delta, **W, **dWmomento;
 };
 
 double dabs(double x);
-cpers_t cpers_create(int neuralIn, int neuralOut, int tipo, cpers_t nextC, cpers_t prevC, long* sem);
-cpers_t cpers_destroy(cpers_t cap);
-cpers_t cpers_from_str(char* strCap);
+cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC, cperc_t prevC, long* sem);
+cperc_t cperc_destroy(cperc_t cap);
+cperc_t cperc_from_str(char* strCap);
 char* myVarStrCat(char* s, const char* format, ...);
-char* cpers_to_str(cpers_t cap);
-double* cpers_eval(cpers_t cap);
-void cpers_apreder(cpers_t cap, double *deseado, int conMomento, double nu);
+char* cperc_to_str(cperc_t cap);
+double* cperc_eval(cperc_t cap);
+void cperc_apreder(cperc_t cap, double *deseado, int conMomento, double nu);
 
 double dabs(double x) {
     if (x < 0.0) return -x;
@@ -34,9 +43,9 @@ double dabs(double x) {
  * La neurona de entrada 0 sienpre es -1.
  * Poner un lugar mas a la entrada.
  */
-cpers_t cpers_create(int neuralIn, int neuralOut, int tipo, cpers_t nextC, cpers_t prevC, long *sem) {
-    cpers_t res = NULL;
-    res = (cpers_t) calloc(1, sizeof (struct sCapaPers));
+cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC, cperc_t prevC, long *sem) {
+    cperc_t res = NULL;
+    res = (cperc_t) calloc(1, sizeof (struct sCapaPerc));
     if (res) {
         int i = 0;
         res->neuralIn = neuralIn;
@@ -65,17 +74,17 @@ cpers_t cpers_create(int neuralIn, int neuralOut, int tipo, cpers_t nextC, cpers
                     }
                 } else {
                     ok = 0;
-                    res = cpers_destroy(res);
+                    res = cperc_destroy(res);
                 }
             }
         } else {
-            res = cpers_destroy(res);
+            res = cperc_destroy(res);
         }
     }
     return res;
 }
 
-cpers_t cpers_destroy(cpers_t cap) {
+cperc_t cperc_destroy(cperc_t cap) {
     if (cap) {
         int i = 0;
         /*printf("aca comiensa el bolonqui\n");*/
@@ -94,14 +103,14 @@ cpers_t cpers_destroy(cpers_t cap) {
         /*printf("aparentemente aca todo bien\n");*/
         if (cap->nextCap)
             cap->nextCap->prevCap = NULL;
-        cpers_destroy(cap->nextCap);
-        cpers_destroy(cap->prevCap);
+        cperc_destroy(cap->nextCap);
+        cperc_destroy(cap->prevCap);
         free(cap);
     }
     return NULL;
 }
 
-cpers_t cpers_from_str(char* strCap) {
+cperc_t cperc_from_str(char* strCap) {
     return NULL;
 }
 
@@ -126,7 +135,7 @@ char* myVarStrCat(char* s, const char* format, ...) {
     return s;
 }
 
-char* cpers_to_str(cpers_t cap) {
+char* cperc_to_str(cperc_t cap) {
     char* res = NULL;
     int l = 0;
     if (cap) {
@@ -150,7 +159,7 @@ char* cpers_to_str(cpers_t cap) {
     return res;
 }
 
-double* cpers_eval(cpers_t cap) {
+double* cperc_eval(cperc_t cap) {
     /* aca calcular la G() -> en V[i] */
     /* y calcular G'() -> en err[i] derivada de G() */
     double *res = NULL;
@@ -172,7 +181,7 @@ double* cpers_eval(cpers_t cap) {
             }
         }
         if (cap->nextCap)
-            res = cpers_eval(cap->nextCap);
+            res = cperc_eval(cap->nextCap);
         else {
             int i = 0;
             res = (double*) calloc(cap->neuralOut, sizeof (double));
@@ -184,12 +193,12 @@ double* cpers_eval(cpers_t cap) {
     return res;
 }
 
-void cpers_apreder(cpers_t cap, double *deseado, int conMomento, double nu) {
+void cperc_apreder(cperc_t cap, double *deseado, int conMomento, double nu) {
     if (cap && cap->prevCap) {
         int fail = 0, i = 0, j = 0;
         if (cap->nextCap) {
             /*aca va lo de la capa no final*/
-            cpers_t nc = cap->nextCap;
+            cperc_t nc = cap->nextCap;
             for (i = 0; i < cap->neuralOut; i++) {
                 double d = 0.0;
                 for (j = 0; j < nc->neuralOut; j++)
@@ -208,7 +217,7 @@ void cpers_apreder(cpers_t cap, double *deseado, int conMomento, double nu) {
         if (!fail) {
             double alfa = 10.0;
             if (!conMomento) alfa = 0.0;
-            cpers_apreder(cap->prevCap, NULL, conMomento, nu);
+            cperc_apreder(cap->prevCap, NULL, conMomento, nu);
             /**
              * aca biene el famoso nu del dW, el alfa de dWmomentum
              * Agregar tambien a y b de nu adaptativo.
@@ -230,16 +239,16 @@ void cpers_apreder(cpers_t cap, double *deseado, int conMomento, double nu) {
     }
 }
 
-struct sRedPers {
+struct sRedPerc {
     int numCap;
     long *sem;
     double nu, *lastErr;
-    cpers_t first, last;
+    cperc_t first, last;
     char* strFile;
 };
 
 /**
- * Crea una red pers con <numCap> capas
+ * Crea una red perc con <numCap> capas
  * y con las catidades de neuronas por capa dadas en <neurPorCapa>
  * Inicializa las neuronas aleatoriamente con pesos en [.5;-.5]
  * indice 0 primera capa ultimo, ultima capa
@@ -249,42 +258,42 @@ struct sRedPers {
  * si (numCap<1 o neurPorCapa==NULL) Y strFile==NULL, se devoñvera NULL
  * y se imprimira por pantalla el error.
  */
-rpers_t rpers_create(int numCap, int* neurPorCapa, int* tipos, char* strFile, long *sem) {
-    rpers_t res = NULL;
+rperc_t rperc_create(int numCap, int* neurPorCapa, int* tipos, char* strFile, long *sem) {
+    rperc_t res = NULL;
     if (0 < numCap && neurPorCapa != NULL && tipos != NULL) {
-        res = (rpers_t) calloc(1, sizeof (struct sRedPers));
+        res = (rperc_t) calloc(1, sizeof (struct sRedPerc));
         if (res) {
             int i = 0;
             res->strFile = strFile;
             res->numCap = numCap;
             res->nu = .0476;
             res->sem = sem;
-            res->first = cpers_create(0, neurPorCapa[0], 0, NULL, NULL, sem);
+            res->first = cperc_create(0, neurPorCapa[0], 0, NULL, NULL, sem);
             res->last = res->first;
             res->lastErr = (double*) calloc(neurPorCapa[numCap - 1], sizeof (double));
             if (res->lastErr)
                 if (res->first)
                     for (i = 0; res && i < numCap; i++) {
-                        res->last->nextCap = cpers_create(neurPorCapa[i], neurPorCapa[i + 1], tipos[i + 1], NULL, res->last, sem);
+                        res->last->nextCap = cperc_create(neurPorCapa[i], neurPorCapa[i + 1], tipos[i + 1], NULL, res->last, sem);
                         if (res->last->nextCap)
                             res->last = res->last->nextCap;
-                        else res = rpers_destroy(res);
-                    } else res = rpers_destroy(res);
-            else res = rpers_destroy(res);
+                        else res = rperc_destroy(res);
+                    } else res = rperc_destroy(res);
+            else res = rperc_destroy(res);
         }
     } else if (strFile != NULL) {
         char* fromFile = NULL;
         /**
          * TODO: Aca leer del archivo y guardarlo en el str
          */
-        res = rpers_from_str(fromFile);
+        res = rperc_from_str(fromFile);
     } else printf("ERROOR!!! Mal inicializada la red.\n");
     return res;
 }
 
-rpers_t rpers_destroy(rpers_t red) {
+rperc_t rperc_destroy(rperc_t red) {
     if (red) {
-        cpers_destroy(red->first);
+        cperc_destroy(red->first);
         free(red->strFile);
         free(red->lastErr);
         free(red);
@@ -293,17 +302,17 @@ rpers_t rpers_destroy(rpers_t red) {
 }
 
 /**
- * Dado un strRed crea una red pers exactamente como la describe strRed
+ * Dado un strRed crea una red perc exactamente como la describe strRed
  */
-rpers_t rpers_from_str(char* strRed) {
+rperc_t rperc_from_str(char* strRed) {
     return NULL;
 }
 
 /**
- * Pasa la red pers a str, guerdando todos los detalles de la red
+ * Pasa la red perc a str, guerdando todos los detalles de la red
  * Separa el str en lineas, cada linea es unaa capa.
  */
-char* rpers_to_str(rpers_t red) {
+char* rperc_to_str(rperc_t red) {
     char* res = NULL;
     int l = 75;
     if (red) {
@@ -311,13 +320,13 @@ char* rpers_to_str(rpers_t red) {
             l += strlen(red->strFile);
         res = (char*) calloc(l, sizeof (char));
         if (res) {
-            cpers_t c = red->first;
+            cperc_t c = red->first;
             int i = 0;
             l = sprintf(res, "File: %s\nNumCapas: %i\tnu: %g\nRed:\n"
                     , red->strFile, red->numCap, red->nu);
             while (c && res) {
                 char* tmp = NULL;
-                tmp = cpers_to_str(c);
+                tmp = cperc_to_str(c);
                 res = myVarStrCat(res, "Cap Num: %i\n", i);
                 res = myVarStrCat(res, tmp);
                 c = c->nextCap;
@@ -329,13 +338,13 @@ char* rpers_to_str(rpers_t red) {
     return res;
 }
 
-int rpers_get_num_In(rpers_t red) {
+int rperc_get_num_In(rperc_t red) {
     if (red && red->first)
         return red->first->neuralOut;
     else return 0;
 }
 
-int rpers_get_num_Out(rpers_t red) {
+int rperc_get_num_Out(rperc_t red) {
     if (red && red->last)
         return red->last->neuralOut;
     else return 0;
@@ -343,41 +352,41 @@ int rpers_get_num_Out(rpers_t red) {
 
 /**
  * El resultado es un array de double,
- * len(res)==rpers_get_num_Out(red)
+ * len(res)==rperc_get_num_Out(red)
  * (Si la ultima capa es de neuronas binarias el resultado es {1,-1})
  * in es la entrada a evaluar por la red,
- * len(in)==rpers_get_num_In(red).
+ * len(in)==rperc_get_num_In(red).
  */
-double* rpers_eval(rpers_t red, double* in) {
+double* rperc_eval(rperc_t red, double* in) {
     double* res = NULL;
     if (red && red->first && in) {
         int i = 0;
-        for (i = 0; i < rpers_get_num_In(red); i++) {
+        for (i = 0; i < rperc_get_num_In(red); i++) {
             red->first->out[i] = in[i];
         }
-        res = cpers_eval(red->first);
+        res = cperc_eval(red->first);
     } else printf("No se puede evaluaaar!!!\nPor:\nred: %i\tfirstCap: %i\t"
             "in: %i\n", red == NULL, red->first == NULL, in == NULL);
     return res;
 }
 
-void rpers_aprender_online(rpers_t red, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento) {
+void rperc_aprender_online(rperc_t red, int intRestantes, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento) {
     if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
-        int intRestantes = numDeIntentos, key = 1, i = 0, j = 0;
+        int myIntRestantes = intRestantes, key = 1, i = 0, j = 0;
         double promErr = 0.0, promErrAnt = 0.0, *res = NULL;
         for (i = 0; i < cantDatos; i++) {
             key = 1;
-            intRestantes = numDeIntentos;
-            free(rpers_eval(red, in[i]));
-            while (key && 0 < intRestantes) {
-                intRestantes--;
+            myIntRestantes = intRestantes;
+            free(rperc_eval(red, in[i]));
+            while (key && 0 < myIntRestantes) {
+                myIntRestantes--;
                 promErr = 0.0;
-                cpers_apreder(red->last, deseado[i], conMomento, red->nu);
-                res = rpers_eval(red, in[i]);
-                for (j = 0; j < rpers_get_num_Out(red); j++)
+                cperc_apreder(red->last, deseado[i], conMomento, red->nu);
+                res = rperc_eval(red, in[i]);
+                for (j = 0; j < rperc_get_num_Out(red); j++)
                     promErr = promErr + dabs(res[j] - deseado[i][j]);
                 promErr = promErr / j;
-                key = (1.0 - (.9 * ((double) intRestantes) / ((double)
+                key = (1.0 - (.9 * ((double) myIntRestantes) / ((double)
                         numDeIntentos)) < promErr);
                 free(res);
                 if (promErr < promErrAnt && red->nu < .048) {
@@ -391,19 +400,19 @@ void rpers_aprender_online(rpers_t red, int numDeIntentos, int cantDatos, double
     }
 }
 
-void rpers_aprender_batch(rpers_t red, int cantDatos, double** in, double** deseado, int conMomento) {
+void rperc_aprender_batch(rperc_t red, int cantDatos, double** in, double** deseado, int conMomento) {
     if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
         int i = 0;
         /*red->nu = .0476;*/
         for (i = 0; i < cantDatos; i++) {
-            free(rpers_eval(red, in[i]));
+            free(rperc_eval(red, in[i]));
             /* aca ver que se podria ir variando el nu de manera decreciente
              * de manera que cada ves aprenda mas detalladamente y no olvide
-             * otras cosas... a medida que la func rpers_aprender avanza.
+             * otras cosas... a medida que la func rperc_aprender avanza.
              * TODO: hacer depender el nu de la cantidad de conceptos aprendido
              * o del tiempo (cantidad de ciclos de aprendizages), en modo batch.
              */
-            cpers_apreder(red->last, deseado[i], conMomento, red->nu);
+            cperc_apreder(red->last, deseado[i], conMomento, red->nu);
         }
     }
 }
@@ -412,10 +421,10 @@ void rpers_aprender_batch(rpers_t red, int cantDatos, double** in, double** dese
  * La red aprende el ultimo valor evaluado
  * deseado es un array de doubles que refleja el resultado que deberia
  * haber teniedo neurona a neurona de sallida para el ultimo in evaluado
- * len(deseado)==rpers_get_num_Out(red)
+ * len(deseado)==rperc_get_num_Out(red)
  * maxErr es el maximo error permtido... (ya vamos a ver en que y donde)
  */
-int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento, metodo aprenderPor) {
+int rperc_aprender(rperc_t red, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento, metodo aprenderPor) {
     int conceptosFaltantes = cantDatos, intRestantes = numDeIntentos, i = 0;
     if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
         double **entradas = NULL, **salidas = NULL, *res = NULL;
@@ -429,7 +438,7 @@ int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, d
             }
             while (0 < conceptosFaltantes && 0 < intRestantes) {
                 /** /if (((faltantes == 1 && (anteriores != faltantes)) || fin == 1) && 4 < cantDatos) {
-                    char *str = rpers_to_str(red);
+                    char *str = rperc_to_str(red);
                     printf("faltantes: %i\tfin: %i\n", faltantes,fin); 
                     printf("%s", str);
                     free(str);
@@ -437,15 +446,22 @@ int rpers_aprender(rpers_t red, int numDeIntentos, int cantDatos, double** in, d
                 intRestantes--;
                 switch (aprenderPor) {
                     case online:
-                        rpers_aprender_online(red, intRestantes, conceptosFaltantes, entradas, salidas, conMomento);
+                        rperc_aprender_online(red, intRestantes, numDeIntentos, conceptosFaltantes, entradas, salidas, conMomento);
                     default:
-                        rpers_aprender_batch(red, /** /cantDatos/ **//**/conceptosFaltantes/**/, entradas, salidas, conMomento);
+                        rperc_aprender_batch(red, /** /cantDatos/ **//**/conceptosFaltantes/**/, entradas, salidas, conMomento);
                 }
                 conceptosFaltantes = 0;
                 for (i = 0; i < cantDatos; i++) {
                     int j = 0, fail = 0;
-                    res = rpers_eval(red, in[i]);
-                    for (j = 0; j < rpers_get_num_Out(red) && !fail; j++)
+                    res = rperc_eval(red, in[i]);
+                    for (j = 0; j < rperc_get_num_Out(red) && !fail; j++)
+                        /**
+                         * TODO: esto deberia ser aparte, dependiendo de que tipo
+                         * son las neuronas de la capa de salida.
+                         * Esto deberia ser un llamado a funcion onda
+                         * "neuronaperc.h"
+                         * double errNeuronaperc(int tipo,int numDeIntentos,int intRestantes,double epsilon);
+                         */
                         fail |= (1.0 - (.9 * ((double) intRestantes) / ((double)
                             numDeIntentos)) < dabs(res[j] - deseado[i][j]));
                     free(res);
