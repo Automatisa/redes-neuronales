@@ -283,10 +283,31 @@ rperc_t rperc_create(int numCap, int* neurPorCapa, int* tipos, char* strFile, lo
         }
     } else if (strFile != NULL) {
         char* fromFile = NULL;
+        FILE* file = NULL;
         /**
          * TODO: Aca leer del archivo y guardarlo en el str
          */
-        res = rperc_from_str(fromFile);
+        file = fopen(strFile, "r");
+        if (file) {
+            char tmp[515];
+            int i = 0, lacum = 0, l = 0;
+            while (0 < l || i == 0) {
+                int ltemp = lacum;
+                l = fread(tmp, sizeof (char), 512, file);
+                lacum += l;
+                fromFile = (char*) realloc(fromFile, (lacum + 1) * sizeof (char));
+                for (i = 0; i < l; i++) fromFile[i + ltemp] = tmp[i];
+                i = 1;
+            }
+            if (lacum && fromFile) {
+                fromFile[lacum] = '\0';
+                res = rperc_from_str(fromFile);
+                free(fromFile);
+                if (res) res->strFile = strFile;
+                else printf("ERROR al armar la red desde el str\n");
+            } else printf("ERROR cargando la red... Archivo vacio!\n");
+            fclose(file);
+        }
     } else printf("ERROOR!!! Mal inicializada la red.\n");
     return res;
 }
@@ -310,7 +331,7 @@ rperc_t rperc_from_str(char* strRed) {
 
 /**
  * Pasa la red perc a str, guerdando todos los detalles de la red
- * Separa el str en lineas, cada linea es unaa capa.
+ * Separa el str en lineas, cada linea es una capa.
  */
 char* rperc_to_str(rperc_t red) {
     char* res = NULL;
@@ -320,16 +341,16 @@ char* rperc_to_str(rperc_t red) {
             l += strlen(red->strFile);
         res = (char*) calloc(l, sizeof (char));
         if (res) {
-            cperc_t c = red->first;
+            cperc_t cap = red->first;
             int i = 0;
-            l = sprintf(res, "File: %s\nNumCapas: %i\tnu: %g\nRed:\n"
-                    , red->strFile, red->numCap, red->nu);
-            while (c && res) {
+            l = sprintf(res, "File: %s\nNumCapas: %i\tnu: %g\nRed:\n",
+                    red->strFile, red->numCap, red->nu);
+            while (cap && res) {
                 char* tmp = NULL;
-                tmp = cperc_to_str(c);
+                tmp = cperc_to_str(cap);
                 res = myVarStrCat(res, "Cap Num: %i\n", i);
                 res = myVarStrCat(res, tmp);
-                c = c->nextCap;
+                cap = cap->nextCap;
                 free(tmp);
                 i++;
             }
