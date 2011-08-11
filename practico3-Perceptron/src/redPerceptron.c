@@ -1,4 +1,4 @@
-/*
+/**
  * File:   capaPerceptron.c
  *
  * $ Author: Eric Nahuel Jurio $
@@ -9,12 +9,12 @@
 
 #include "redPerceptron.h"
 #include "neuronaPerceptron.h"
-#include "generadores.h"
+#include "../lib/generadores.h"
+#include "../lib/otraLibMas.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <stdarg.h>
 
 typedef struct sCapaPerc *cperc_t;
 
@@ -24,26 +24,30 @@ struct sCapaPerc {
     double *out, *delta, **W, **dWmomento;
 };
 
-double dabs(double x);
-cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC, cperc_t prevC, long* sem);
+cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC,
+        cperc_t prevC, long *sem);
 cperc_t cperc_destroy(cperc_t cap);
-cperc_t cperc_from_str(char* strCap);
-char* myVarStrCat(char* s, const char* format, ...);
-char* cperc_to_str(cperc_t cap);
-double* cperc_eval(cperc_t cap);
-void cperc_apreder(cperc_t cap, double *deseado, int conMomento, double nu);
-
-double dabs(double x) {
-    if (x < 0.0) return -x;
-    return x;
-}
+cperc_t cperc_from_str(char *strCap);
+char *cperc_to_str(cperc_t cap);
+double *cperc_eval(cperc_t cap, int hacerDerivada);
+void cperc_aprender(cperc_t cap, double *deseado, double alfaMomento, double nu);
+double *rperc_evalX(rperc_t red, double *in, int aprenderONo);
+double *rperc_evalParaAprender(rperc_t red, double **in, int *selec, int point);
+void rperc_adaptarNu(rperc_t red, double newError);
+int rperc_rectaError(rperc_t red, int len, double* res, double* deseado,
+        double *retErr);
+void rperc_aprender_online(rperc_t red, int cantDatos, double **in,
+        double **deseado, int *selec);
+void rperc_aprender_batch(rperc_t red, int cantDatos, double **in,
+        double **deseado, int *selec);
 
 /**
  * TODO: TEEEENEEEER EEEN CUENTAAAAAA!!!!!!!!!!!
  * La neurona de entrada 0 sienpre es -1.
  * Poner un lugar mas a la entrada.
  */
-cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC, cperc_t prevC, long *sem) {
+cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC,
+        cperc_t prevC, long *sem) {
     cperc_t res = NULL;
     res = (cperc_t) calloc(1, sizeof (struct sCapaPerc));
     if (res) {
@@ -53,24 +57,24 @@ cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC, cperc
         res->tipo = tipo;
         res->nextCap = nextC;
         res->prevCap = prevC;
-        res->out = (double*) calloc(neuralOut, sizeof (double));
-        res->delta = (double*) calloc(neuralOut, sizeof (double));
-        res->W = (double**) calloc(neuralOut, sizeof (double*));
-        res->dWmomento = (double**) calloc(neuralOut, sizeof (double*));
+        res->out = (double *) calloc(neuralOut, sizeof (double));
+        res->delta = (double *) calloc(neuralOut, sizeof (double));
+        res->W = (double **) calloc(neuralOut, sizeof (double *));
+        res->dWmomento = (double **) calloc(neuralOut, sizeof (double *));
         if (res->W && res->dWmomento && res->out && res->delta) {
             int ok = 1;
             for (i = 0; ok && i < neuralOut; i++) {
-                res->delta[i] = 0.0;
-                res->out[i] = 0.0;
+                res->delta[i] = .0;
+                res->out[i] = .0;
                 res->W[i] = NULL;
                 res->dWmomento[i] = NULL;
-                res->W[i] = (double*) calloc(neuralIn + 1, sizeof (double));
-                res->dWmomento[i] = (double*) calloc(neuralIn + 1, sizeof (double));
+                res->W[i] = (double *) calloc(neuralIn + 1, sizeof (double));
+                res->dWmomento[i] = (double *) calloc(neuralIn + 1, sizeof (double));
                 if (res->W[i] && res->dWmomento[i]) {
                     int j = 0;
                     for (j = 0; j < neuralIn + 1; j++) {
                         res->W[i][j] = (ran2(sem) - .5) / (double) (neuralIn + 1);
-                        res->dWmomento[i][j] = 0.0;
+                        res->dWmomento[i][j] = .0;
                     }
                 } else {
                     ok = 0;
@@ -87,20 +91,20 @@ cperc_t cperc_create(int neuralIn, int neuralOut, int tipo, cperc_t nextC, cperc
 cperc_t cperc_destroy(cperc_t cap) {
     if (cap) {
         int i = 0;
-        /*printf("aca comiensa el bolonqui\n");*/
         free(cap->delta);
         free(cap->out);
         if (cap->W) {
             for (i = 0; i < cap->neuralOut; i++)
-                if (cap->W[i]) free(cap->W[i]);
+                if (cap->W[i])
+                    free(cap->W[i]);
             free(cap->W);
         }
         if (cap->dWmomento) {
             for (i = 0; i < cap->neuralOut; i++)
-                if (cap->dWmomento[i]) free(cap->dWmomento[i]);
+                if (cap->dWmomento[i])
+                    free(cap->dWmomento[i]);
             free(cap->dWmomento);
         }
-        /*printf("aparentemente aca todo bien\n");*/
         if (cap->nextCap)
             cap->nextCap->prevCap = NULL;
         cperc_destroy(cap->nextCap);
@@ -110,41 +114,20 @@ cperc_t cperc_destroy(cperc_t cap) {
     return NULL;
 }
 
-cperc_t cperc_from_str(char* strCap) {
+cperc_t cperc_from_str(char *strCap) {
     return NULL;
 }
 
-char* myVarStrCat(char* s, const char* format, ...) {
-    char *tmp = NULL, *var = NULL;
-    int l = -1;
-    va_list vl;
-    va_start(vl, format);
-    var = (char*) calloc(strlen(format) + 500, sizeof (char));
-    vsprintf(var, format, vl);
-
-    va_end(vl);
-    if (s && var) {
-        l = strlen(var);
-        tmp = calloc(l + 500, sizeof (char));
-        l = 1 + sprintf(tmp, "%s", var);
-        s = (char*) realloc(s, (sizeof (char)) * (l + 1000 + strlen(tmp)));
-        /**/s = strcat(s, tmp); /**/
-        free(tmp);
-    }
-    free(var);
-    return s;
-}
-
-char* cperc_to_str(cperc_t cap) {
-    char* res = NULL;
+char *cperc_to_str(cperc_t cap) {
+    char *res = NULL;
     int l = 0;
     if (cap) {
         l = 275;
-        res = (char*) calloc(l, sizeof (char));
+        res = (char *) calloc(l, sizeof (char));
         if (res) {
             int i = 0, j = 0;
-            l = sprintf(res, "Tipo: %i\nNumOut: %i\tNumIn: %i\n"
-                    , cap->tipo, cap->neuralOut, cap->neuralIn);
+            l = sprintf(res, "Tipo: %i\nNumOut: %i\tNumIn: %i\n", cap->tipo,
+                    cap->neuralOut, cap->neuralIn);
             for (i = 0; i < cap->neuralOut && res; i++) {
                 res = myVarStrCat(res, "%i\t[ ", i);
                 for (j = 0; j <= cap->neuralIn && res; j++)
@@ -159,7 +142,7 @@ char* cperc_to_str(cperc_t cap) {
     return res;
 }
 
-double* cperc_eval(cperc_t cap) {
+double *cperc_eval(cperc_t cap, int hacerDerivada) {
     /* aca calcular la G() -> en V[i] */
     /* y calcular G'() -> en err[i] derivada de G() */
     double *res = NULL;
@@ -169,22 +152,23 @@ double* cperc_eval(cperc_t cap) {
             for (i = 0; i < cap->neuralOut; i++) {
                 cap->out[i] = -cap->W[i][cap->neuralIn];
                 for (j = 0; j < cap->neuralIn; j++)
-                    cap->out[i] = cap->out[i] +(cap->W[i][j] * cap->prevCap->out[j]);
-                cap->delta[i] = dg(2.0 * cap->out[i], cap->tipo);
+                    cap->out[i] = cap->out[i] + (cap->W[i][j] * cap->prevCap->out[j]);
+                if (hacerDerivada)
+                    cap->delta[i] = dg(/*2.0 **/ cap->out[i], cap->tipo);
                 /* TODO: Evaluar posibilidad de si es tipo 0
                  * y es la ultima capa, usar out=sig(g)
                  * de lo contrario arreglar el problema de satisfaccion
                  * en el aprendizage a nivel red y no a nivel capa
                  * TODO: ver que aca el beta es fijo.
                  */
-                cap->out[i] = g(2.0 * cap->out[i], cap->tipo);
+                cap->out[i] = g(/*2.0 **/ cap->out[i], cap->tipo);
             }
         }
         if (cap->nextCap)
-            res = cperc_eval(cap->nextCap);
+            res = cperc_eval(cap->nextCap, hacerDerivada);
         else {
             int i = 0;
-            res = (double*) calloc(cap->neuralOut, sizeof (double));
+            res = (double *) calloc(cap->neuralOut, sizeof (double));
             if (res)
                 for (i = 0; i < cap->neuralOut; i++)
                     res[i] = cap->out[i];
@@ -193,21 +177,21 @@ double* cperc_eval(cperc_t cap) {
     return res;
 }
 
-void cperc_apreder(cperc_t cap, double *deseado, int conMomento, double nu) {
+void cperc_aprender(cperc_t cap, double *deseado, double alfaMomento, double nu) {
     if (cap && cap->prevCap) {
         int fail = 0, i = 0, j = 0;
         if (cap->nextCap) {
-            /*aca va lo de la capa no final*/
+            /*aca va lo de la capa no final */
             cperc_t nc = cap->nextCap;
             for (i = 0; i < cap->neuralOut; i++) {
-                double d = 0.0;
+                double d = .0;
                 for (j = 0; j < nc->neuralOut; j++)
                     d = d + nc->W[j][i] * nc->delta[j];
                 cap->delta[i] = cap->delta[i] * d;
             }
         } else {
             if (deseado) {
-                /*aca va lo de la capa final*/
+                /*aca va lo de la capa final */
                 for (i = 0; i < cap->neuralOut; i++)
                     cap->delta[i] = cap->delta[i] * (deseado[i] - cap->out[i]);
             } else {
@@ -215,9 +199,7 @@ void cperc_apreder(cperc_t cap, double *deseado, int conMomento, double nu) {
             }
         }
         if (!fail) {
-            double alfa = 10.0;
-            if (!conMomento) alfa = 0.0;
-            cperc_apreder(cap->prevCap, NULL, conMomento, nu);
+            cperc_aprender(cap->prevCap, NULL, alfaMomento, nu);
             /**
              * aca biene el famoso nu del dW, el alfa de dWmomentum
              * Agregar tambien a y b de nu adaptativo.
@@ -228,62 +210,108 @@ void cperc_apreder(cperc_t cap, double *deseado, int conMomento, double nu) {
              */
             for (i = 0; i < cap->neuralOut; i++) {
                 j = cap->neuralIn;
-                cap->dWmomento[i][j] = nu * (-cap->delta[i] + alfa * cap->dWmomento[i][j]);
+                cap->dWmomento[i][j] = nu * -cap->delta[i] + alfaMomento
+                        * cap->dWmomento[i][j];
                 cap->W[i][j] = cap->W[i][j] + cap->dWmomento[i][j];
                 for (j = 0; j < cap->neuralIn; j++) {
-                    cap->dWmomento[i][j] = nu * (cap->prevCap->out[j] * cap->delta[i] + alfa * cap->dWmomento[i][j]);
+                    cap->dWmomento[i][j] = nu * cap->prevCap->out[j]
+                            * cap->delta[i] + alfaMomento * cap->dWmomento[i][j];
                     cap->W[i][j] = cap->W[i][j] + cap->dWmomento[i][j];
                 }
-            }/**/
+            }
+            /**/
         }
     }
 }
 
 struct sRedPerc {
-    int numCap;
+    int numCap, numRealIn, tipoErr, totIntentos, intRestantes, descending,
+            calentContext;
     long *sem;
-    double nu, *lastErr;
+    double nu, alfaMomento, oldError, maxNu, minNu, upNu, downNu, *lastErr,
+            *muRetenContex, maxErr, minErr;
     cperc_t first, last;
-    char* strFile;
+    char *strFile;
 };
 
 /**
  * Crea una red perc con <numCap> capas
  * y con las catidades de neuronas por capa dadas en <neurPorCapa>
+ * <tipos> indica de que tipo es cada capa. Sem es un puntero a un long
+ * primo y negativo, para inicializar la semilla del random.
+ * muRetenContex indica la retencion de cada capa de contexto, si
+ * muRetenContex[i] esta fuera de [0.0;1.0]; luego la capa[i] no es
+ * retroalimentada; muRetenContex[i] cercano a 0.0, olvida rapido, cercano a
+ * 1.0, memoria perdura.
  * Inicializa las neuronas aleatoriamente con pesos en [.5;-.5]
  * indice 0 primera capa ultimo, ultima capa
  * Si no se desea guardar la red se pasa strFile==NULL
  * strFile indica donde guardar la red.
  * si numCap<1 o neurPorCapa==NULL, se cargara la red desde strFile
- * si (numCap<1 o neurPorCapa==NULL) Y strFile==NULL, se devoñvera NULL
+ * si (numCap<1 o neurPorCapa==NULL) Y strFile==NULL, se devolvera NULL
  * y se imprimira por pantalla el error.
  */
-rperc_t rperc_create(int numCap, int* neurPorCapa, int* tipos, char* strFile, long *sem) {
+rperc_t rperc_create(int numCap, int* neurPorCapa, int* tipos,
+        double* muRetenContex, char* strFile, long* sem) {
     rperc_t res = NULL;
     if (0 < numCap && neurPorCapa != NULL && tipos != NULL) {
         res = (rperc_t) calloc(1, sizeof (struct sRedPerc));
         if (res) {
-            int i = 0;
+            int i = 0, neurInMasContext = neurPorCapa[0], neurInBackup = neurPorCapa[0];
+            res->numRealIn = neurInMasContext;
+            if (muRetenContex) {
+                double maxRetCont = .0;
+                res->muRetenContex = (double *) calloc(numCap + 1, sizeof (double));
+                for (i = 0; i < numCap + 1; i++) {
+                    res->muRetenContex[i] = muRetenContex[i];
+                    if (0.0 <= muRetenContex[i] && muRetenContex[i] <= 1.0) {
+                        if (maxRetCont < muRetenContex[i])maxRetCont = muRetenContex[i];
+                        neurInMasContext += neurPorCapa[i];
+                    }
+                }
+                res->calentContext = 1 + log(.05) / log(maxRetCont);
+            } else {
+                res->muRetenContex = NULL;
+                res->calentContext = 0;
+            }
+            neurPorCapa[0] = neurInMasContext;
             res->strFile = strFile;
             res->numCap = numCap;
             res->nu = .0476;
+            res->alfaMomento = .5;
+            res->maxNu = .048;
+            res->minNu = .025;
+            res->upNu = .0001;
+            res->downNu = .91;
+            res->oldError = .0;
+            res->tipoErr = 0;
+            res->totIntentos = 300;
+            res->intRestantes = res->totIntentos;
+            res->descending = 1;
+            res->maxErr = 1.0;
+            res->minErr = .1;
             res->sem = sem;
             res->first = cperc_create(0, neurPorCapa[0], 0, NULL, NULL, sem);
             res->last = res->first;
-            res->lastErr = (double*) calloc(neurPorCapa[numCap - 1], sizeof (double));
+            res->lastErr = (double *) calloc(neurPorCapa[numCap - 1], sizeof (double));
             if (res->lastErr)
                 if (res->first)
                     for (i = 0; res && i < numCap; i++) {
-                        res->last->nextCap = cperc_create(neurPorCapa[i], neurPorCapa[i + 1], tipos[i + 1], NULL, res->last, sem);
+                        res->last->nextCap = cperc_create(neurPorCapa[i],
+                                neurPorCapa[i + 1], tipos[i + 1], NULL, res->last, sem);
                         if (res->last->nextCap)
                             res->last = res->last->nextCap;
-                        else res = rperc_destroy(res);
-                    } else res = rperc_destroy(res);
-            else res = rperc_destroy(res);
+                        else
+                            res = rperc_destroy(res);
+                    } else
+                    res = rperc_destroy(res);
+            else
+                res = rperc_destroy(res);
+            neurPorCapa[0] = neurInBackup;
         }
     } else if (strFile != NULL) {
-        char* fromFile = NULL;
-        FILE* file = NULL;
+        char *fromFile = NULL;
+        FILE *file = NULL;
         /**
          * TODO: Aca leer del archivo y guardarlo en el str
          */
@@ -295,20 +323,25 @@ rperc_t rperc_create(int numCap, int* neurPorCapa, int* tipos, char* strFile, lo
                 int ltemp = lacum;
                 l = fread(tmp, sizeof (char), 512, file);
                 lacum += l;
-                fromFile = (char*) realloc(fromFile, (lacum + 1) * sizeof (char));
-                for (i = 0; i < l; i++) fromFile[i + ltemp] = tmp[i];
+                fromFile = (char *) realloc(fromFile, (lacum + 1) * sizeof (char));
+                for (i = 0; i < l; i++)
+                    fromFile[i + ltemp] = tmp[i];
                 i = 1;
             }
             if (lacum && fromFile) {
                 fromFile[lacum] = '\0';
                 res = rperc_from_str(fromFile);
                 free(fromFile);
-                if (res) res->strFile = strFile;
-                else printf("ERROR al armar la red desde el str\n");
-            } else printf("ERROR cargando la red... Archivo vacio!\n");
+                if (res)
+                    res->strFile = strFile;
+                else
+                    printf("ERROR al armar la red desde el str\n");
+            } else
+                printf("ERROR cargando la red... Archivo vacio!\n");
             fclose(file);
         }
-    } else printf("ERROOR!!! Mal inicializada la red.\n");
+    } else
+        printf("ERROOR!!! Mal inicializada la red.\n");
     return res;
 }
 
@@ -325,28 +358,29 @@ rperc_t rperc_destroy(rperc_t red) {
 /**
  * Dado un strRed crea una red perc exactamente como la describe strRed
  */
-rperc_t rperc_from_str(char* strRed) {
+rperc_t rperc_from_str(char *strRed) {
     return NULL;
 }
 
 /**
- * Pasa la red perc a str, guerdando todos los detalles de la red
+ * Pasa la red perc a str, guardando todos los detalles de la red
  * Separa el str en lineas, cada linea es una capa.
  */
-char* rperc_to_str(rperc_t red) {
-    char* res = NULL;
+char *rperc_to_str(rperc_t red) {
+    char *res = NULL;
     int l = 75;
     if (red) {
         if (red->strFile)
             l += strlen(red->strFile);
-        res = (char*) calloc(l, sizeof (char));
+        res = (char *) calloc(l, sizeof (char));
         if (res) {
             cperc_t cap = red->first;
             int i = 0;
-            l = sprintf(res, "File: %s\nNumCapas: %i\tnu: %g\nRed:\n",
-                    red->strFile, red->numCap, red->nu);
+            l = sprintf(res, "File: %s\nNumCapas: %i\tnu: %g\tmaxNu: %g\tminNu: %g\tupNu: %g\tdownNu: %g\talfaMomento: %g\nRed:\n",
+                    red->strFile, red->numCap, red->nu, red->maxNu, red->minNu,
+                    red->upNu, red->downNu, red->alfaMomento);
             while (cap && res) {
-                char* tmp = NULL;
+                char *tmp = NULL;
                 tmp = cperc_to_str(cap);
                 res = myVarStrCat(res, "Cap Num: %i\n", i);
                 res = myVarStrCat(res, tmp);
@@ -355,20 +389,125 @@ char* rperc_to_str(rperc_t red) {
                 i++;
             }
         }
-    } else printf("ups\n");
+    } else
+        printf("ups\n");
     return res;
 }
 
-int rperc_get_num_In(rperc_t red) {
+int rperc_get_num_Context(rperc_t red) {
     if (red && red->first)
-        return red->first->neuralOut;
-    else return 0;
+        return red->first->neuralOut - red->numRealIn;
+    return 0;
+}
+
+int rperc_get_num_In(rperc_t red) {
+    if (red)
+        return red->numRealIn;
+    return 0;
 }
 
 int rperc_get_num_Out(rperc_t red) {
     if (red && red->last)
         return red->last->neuralOut;
-    else return 0;
+    return 0;
+}
+
+int rperc_get_numCap(rperc_t red) {
+    if (red)
+        return red->numCap;
+    return 0;
+}
+
+double rperc_get_nu(rperc_t red) {
+    if (red)
+        return red->nu;
+    return .0476;
+}
+
+double rperc_get_maxNu(rperc_t red) {
+    if (red)
+        return red->maxNu;
+    return .048;
+}
+
+double rperc_get_minNu(rperc_t red) {
+    if (red)
+        return red->minNu;
+    return .025;
+}
+
+double rperc_get_upNu(rperc_t red) {
+    if (red)
+        return red->upNu;
+    return .0001;
+}
+
+double rperc_get_downNu(rperc_t red) {
+    if (red)
+        return red->downNu;
+    return .91;
+}
+
+double rperc_get_alfaMomento(rperc_t red) {
+    if (red)
+        return red->alfaMomento;
+    return .5;
+}
+
+int rperc_set_alfaMomento(rperc_t red, double newAlfaMomento) {
+    if (red && .0 < newAlfaMomento && newAlfaMomento < 1.0) {
+        red->alfaMomento = newAlfaMomento;
+        return 1;
+    }
+    return 0;
+}
+
+int rperc_set_allNu(rperc_t red, double newNu, double newMaxNu, double newMinNu,
+        double newUpNu, double newDownNu) {
+    if (red && .0 < newNu && newNu < 1.0 && newMinNu < newMaxNu && .0 < newMinNu
+            && newMaxNu < 1.0 && .0 < newUpNu && newUpNu < 1.0 && .0 < newDownNu
+            && newDownNu < 1.0) {
+        red->nu = newNu;
+        red->maxNu = newMaxNu;
+        red->minNu = newMinNu;
+        red->upNu = newUpNu;
+        red->downNu = newDownNu;
+        return 1;
+    }
+    return 0;
+}
+
+int rperc_set_porcErrContext(rperc_t red, double porc) {
+    if (red && .0 < porc && porc < 1.0) {
+        double maxRetCont = .0;
+        int i = 0;
+        for (i = 0; i < red->numCap + 1; i++)
+            if (0.0 <= red->muRetenContex[i] && red->muRetenContex[i] <= 1.0
+                    && maxRetCont < red->muRetenContex[i])
+                maxRetCont = red->muRetenContex[i];
+        red->calentContext = 1 + log(porc) / log(maxRetCont);
+    }
+    return 0;
+}
+
+int rperc_set_rectaError(rperc_t red, int totIntentos, double minErr,
+        double maxErr, int tipoErr) {
+    if (red) {
+        minErr = dabs(minErr);
+        maxErr = dabs(maxErr);
+        if (maxErr < minErr) {
+            double tmp = minErr;
+            minErr = maxErr;
+            maxErr = tmp;
+        }
+        if (minErr != .0) red->minErr = minErr;
+        if (maxErr != .0) red->maxErr = maxErr;
+        if (0 < totIntentos)red->totIntentos = totIntentos;
+        else red->totIntentos = -totIntentos + 1;
+        if (0 < tipoErr)red->tipoErr = tipoErr;
+        else red->tipoErr = -tipoErr;
+    }
+    return 0;
 }
 
 /**
@@ -378,62 +517,126 @@ int rperc_get_num_Out(rperc_t red) {
  * in es la entrada a evaluar por la red,
  * len(in)==rperc_get_num_In(red).
  */
-double* rperc_eval(rperc_t red, double* in) {
-    double* res = NULL;
+double *rperc_eval(rperc_t red, double *in) {
+    return rperc_evalX(red, in, 0);
+}
+
+double *rperc_evalParaAprender(rperc_t red, double **in, int *selec, int point) {
+    int i = 0;
+    if (red && rperc_get_num_Context(red) != 0) {
+        if (selec[point] == 0) {
+            cperc_t tempC = red->first;
+            while (tempC) {
+                for (i = 0; i < tempC->neuralOut; i++)
+                    tempC->out[i] = .0;
+                tempC = tempC->nextCap;
+            }
+        } else if (point == 0 || red->calentContext < selec[point] - selec[point - 1])
+            for (i = red->calentContext; 0 < i; i--) {
+                if (i <= selec[point])
+                    free(rperc_eval(red, in[selec[point] - i]));
+            } else if (selec[point - 1] < selec[point])
+            for (i = selec[point - 1] + 1; i < selec[point]; i++)
+                free(rperc_eval(red, in[i]));
+    }
+    return rperc_evalX(red, in[selec[point]], 1);
+}
+
+double *rperc_evalX(rperc_t red, double *in, int aprenderONo) {
+    double *res = NULL;
     if (red && red->first && in) {
         int i = 0;
+        cperc_t capaActual = red->first;
         for (i = 0; i < rperc_get_num_In(red); i++) {
             red->first->out[i] = in[i];
         }
-        res = cperc_eval(red->first);
-    } else printf("No se puede evaluaaar!!!\nPor:\nred: %i\tfirstCap: %i\t"
-            "in: %i\n", red == NULL, red->first == NULL, in == NULL);
+        if (red->muRetenContex && rperc_get_num_Context(red))
+            for (int j = 0; j < red->numCap + 1; j++) {
+                if (0.0 <= red->muRetenContex[j] && red->muRetenContex[j] <= 1.0)
+                    for (int k = 0; capaActual && i < red->first->neuralOut
+                            && ((capaActual == red->first && k < rperc_get_num_In(red))
+                            || (capaActual != red->first && k < capaActual->neuralOut)); k++) {
+                        red->first->out[i] = red->first->out[i] * red->muRetenContex[j]
+                                + capaActual->out[k];
+                        i++;
+                    }
+                capaActual = capaActual->nextCap;
+            }
+        res = cperc_eval(red->first, aprenderONo);
+    } else
+        printf("No se puede evaluaaar!!!\nPor:\nred: %i\tfirstCap: %i\tin: %i\n",
+            red == NULL, red->first == NULL, in == NULL);
     return res;
 }
 
-void rperc_aprender_online(rperc_t red, int intRestantes, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento) {
-    if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
-        int myIntRestantes = intRestantes, key = 1, i = 0, j = 0;
-        double promErr = 0.0, promErrAnt = 0.0, *res = NULL;
-        for (i = 0; i < cantDatos; i++) {
-            key = 1;
-            myIntRestantes = intRestantes;
-            free(rperc_eval(red, in[i]));
-            while (key && 0 < myIntRestantes) {
-                myIntRestantes--;
-                promErr = 0.0;
-                cperc_apreder(red->last, deseado[i], conMomento, red->nu);
-                res = rperc_eval(red, in[i]);
-                for (j = 0; j < rperc_get_num_Out(red); j++)
-                    promErr = promErr + dabs(res[j] - deseado[i][j]);
-                promErr = promErr / j;
-                key = (1.0 - (.9 * ((double) myIntRestantes) / ((double)
-                        numDeIntentos)) < promErr);
+void rperc_adaptarNu(rperc_t red, double newError) {
+    red->descending = 1;
+    if (newError < red->oldError) {
+        red->descending = 1;
+        if (red->nu < red->maxNu) {
+            red->nu = red->nu + red->upNu;
+        }
+    } else if (red->oldError < newError) {
+        red->descending = 0;
+        if (red->minNu < red->nu) {
+            red->nu = red->nu * red->downNu;
+        }
+    }
+    red->oldError = newError;
+}
+
+int rperc_rectaError(rperc_t red, int len, double* res, double* deseado,
+        double *retErr) {
+    int fail = 0, j;
+    *retErr = .0;
+    switch (red->tipoErr) {
+        case 1:
+            for (j = 0; j < len; j++)
+                *retErr = *retErr + dabs(res[j] - deseado[j]);
+            *retErr = *retErr / (double) j;
+            fail = (red->maxErr - ((red->maxErr - red->minErr) * ((double) red->intRestantes)
+                    / ((double) red->totIntentos)) < *retErr);
+        default:
+            for (j = 0; j < len; j++) {
+                if (*retErr < dabs(res[j] - deseado[j])) *retErr = dabs(res[j] - deseado[j]);
+                fail |= (red->maxErr - ((red->maxErr - red->minErr) * ((double) red->intRestantes)
+                        / ((double) red->totIntentos)) < *retErr);
+            }
+    }
+    return fail;
+}
+
+void rperc_aprender_online(rperc_t red, int cantDatos, double **in,
+        double **deseado, int *selec) {
+    if (red && deseado && in && selec && deseado[cantDatos - 1] && in[cantDatos - 1]) {
+        double newError = .0, *res = NULL;
+        for (int i = 0; i < cantDatos; i++) {
+            int fail = 1, localIntRestantes = red->intRestantes;
+            free(rperc_evalParaAprender(red, in, selec, i));
+            while (fail && 0 < localIntRestantes) {
+                localIntRestantes--;
+                cperc_aprender(red->last, deseado[selec[i]],
+                        ((double) red->descending) * red->alfaMomento, red->nu);
+                res = rperc_evalParaAprender(red, in, selec, i);
+                fail = rperc_rectaError(rperc_get_num_Out(red), res,
+                        deseado[selec[i]], &newError);
                 free(res);
-                if (promErr < promErrAnt && red->nu < .048) {
-                    red->nu = red->nu * 1.0003;
-                } else if (promErrAnt < promErr && .025 < red->nu) {
-                    red->nu = red->nu * .91;
-                }
-                promErrAnt = promErr;
+                rperc_adaptarNu(red, newError);
             }
         }
     }
 }
 
-void rperc_aprender_batch(rperc_t red, int cantDatos, double** in, double** deseado, int conMomento) {
-    if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
+void rperc_aprender_batch(rperc_t red, int cantDatos, double **in,
+        double **deseado, int *selec) {
+    if (red && deseado && in && selec && deseado[cantDatos - 1] && in[cantDatos - 1]) {
         int i = 0;
-        /*red->nu = .0476;*/
+        double conMomento_d;
+        if (red->descending) conMomento_d = 1.0;
+        else conMomento_d = .0;
         for (i = 0; i < cantDatos; i++) {
-            free(rperc_eval(red, in[i]));
-            /* aca ver que se podria ir variando el nu de manera decreciente
-             * de manera que cada ves aprenda mas detalladamente y no olvide
-             * otras cosas... a medida que la func rperc_aprender avanza.
-             * TODO: hacer depender el nu de la cantidad de conceptos aprendido
-             * o del tiempo (cantidad de ciclos de aprendizages), en modo batch.
-             */
-            cperc_apreder(red->last, deseado[i], conMomento, red->nu);
+            free(rperc_evalParaAprender(red, in, selec, i));
+            cperc_aprender(red->last, deseado[selec[i]], conMomento_d * red->alfaMomento, red->nu);
         }
     }
 }
@@ -445,73 +648,52 @@ void rperc_aprender_batch(rperc_t red, int cantDatos, double** in, double** dese
  * len(deseado)==rperc_get_num_Out(red)
  * maxErr es el maximo error permtido... (ya vamos a ver en que y donde)
  */
-int rperc_aprender(rperc_t red, int numDeIntentos, int cantDatos, double** in, double** deseado, int conMomento, metodo aprenderPor) {
-    int conceptosFaltantes = cantDatos, intRestantes = numDeIntentos, i = 0;
+int rperc_aprender(rperc_t red, int cantDatos, double** in, double** deseado,
+        metodo aprenderPor) {
+    int conceptosFaltantes = cantDatos, i = 0;
+    red->intRestantes = red->totIntentos;
     if (red && deseado && in && deseado[cantDatos - 1] && in[cantDatos - 1]) {
-        double **entradas = NULL, **salidas = NULL, *res = NULL;
-        entradas = (double**) calloc(cantDatos, sizeof (double*));
-        salidas = (double**) calloc(cantDatos, sizeof (double*));
-        if (entradas && salidas) {
-            int concFaltAnt = cantDatos;
+        double *res = NULL;
+        int *selec = NULL;
+        selec = (int *) calloc(cantDatos, sizeof (int));
+        if (selec) {
+            red->oldError = (double) cantDatos;
             for (i = 0; i < cantDatos; i++) {
-                entradas[i] = in[i];
-                salidas[i] = deseado[i];
+                selec[i] = i;
             }
-            while (0 < conceptosFaltantes && 0 < intRestantes) {
-                /** /if (((faltantes == 1 && (anteriores != faltantes)) || fin == 1) && 4 < cantDatos) {
-                    char *str = rperc_to_str(red);
-                    printf("faltantes: %i\tfin: %i\n", faltantes,fin); 
-                    printf("%s", str);
-                    free(str);
-                }/ **/
-                intRestantes--;
+            while (0 < conceptosFaltantes && 0 < red->intRestantes) {
+                red->intRestantes--;
                 switch (aprenderPor) {
                     case online:
-                        rperc_aprender_online(red, intRestantes, numDeIntentos, conceptosFaltantes, entradas, salidas, conMomento);
+                        rperc_aprender_online(red, conceptosFaltantes, in,
+                                deseado, selec);
                     default:
-                        rperc_aprender_batch(red, /** /cantDatos/ **//**/conceptosFaltantes/**/, entradas, salidas, conMomento);
+                        rperc_aprender_batch(red, conceptosFaltantes, in,
+                                deseado, selec);
                 }
                 conceptosFaltantes = 0;
                 for (i = 0; i < cantDatos; i++) {
-                    int j = 0, fail = 0;
+                    int fail = 0;
+                    double none;
                     res = rperc_eval(red, in[i]);
-                    for (j = 0; j < rperc_get_num_Out(red) && !fail; j++)
-                        /**
-                         * TODO: esto deberia ser aparte, dependiendo de que tipo
-                         * son las neuronas de la capa de salida.
-                         * Esto deberia ser un llamado a funcion onda
-                         * "neuronaperc.h"
-                         * double errNeuronaperc(int tipo,int numDeIntentos,int intRestantes,double epsilon);
-                         */
-                        fail |= (1.0 - (.9 * ((double) intRestantes) / ((double)
-                            numDeIntentos)) < dabs(res[j] - deseado[i][j]));
+                    fail = rperc_rectaError(rperc_get_num_Out(red), res, deseado[i],
+                            &none);
                     free(res);
                     if (fail) {
-                        /**/entradas[conceptosFaltantes] = in[i];
-                        salidas[conceptosFaltantes] = deseado[i]; /**/
+                        selec[conceptosFaltantes] = i;
                         conceptosFaltantes++;
                     }
-                }/**/
-                for (i = /** /cantDatos/ **//**/conceptosFaltantes/**/; 0 < i; i--) {
-                    int r = i * ran2(red->sem);
-                    double* tmp = NULL;
-                    tmp = entradas[i - 1];
-                    entradas[i - 1] = entradas[r];
-                    entradas[r] = tmp;
-                    tmp = salidas[i - 1];
-                    salidas[i - 1] = salidas[r];
-                    salidas[r] = tmp;
-                }/**/
-                if (conceptosFaltantes < concFaltAnt && red->nu < .048) {
-                    red->nu = red->nu * 1.0003;
-                } else if (concFaltAnt < conceptosFaltantes && .025 < red->nu) {
-                    red->nu = red->nu * .91;
-                }/**/
-                concFaltAnt = conceptosFaltantes;
+                }
+                rperc_adaptarNu(red, (double) conceptosFaltantes);
+                for (i = conceptosFaltantes; 0 < i; i--) {
+                    int r = i * ran2(red->sem), tmp = 0;
+                    tmp = selec[i - 1];
+                    selec[i - 1] = selec[r];
+                    selec[r] = tmp;
+                }
             }
-            free(entradas);
-            free(salidas);
+            free(selec);
         }
     }
-    return intRestantes;
+    return red->intRestantes;
 }

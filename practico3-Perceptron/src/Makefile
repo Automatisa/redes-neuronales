@@ -1,8 +1,8 @@
 TARGET=perceptron_practico3
 CC=gcc
-CFLAGS+= -ansi -Wall -Wextra -Wdeclaration-after-statement -Wbad-function-cast -Wcast-qual -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes -Wno-unused-parameter -Werror -pedantic -g `pkg-config --cflags glib-2.0` -lm
-LDFLAGS=`pkg-config --libs glib-2.0`
-SOURCES=$(shell echo *.c)
+CFLAGS+= -ansi -Wall -Wextra -Wdeclaration-after-statement -Wbad-function-cast -Wcast-qual -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes -Wno-unused-parameter -Werror -pedantic -lm -pthread# -g `pkg-config --cflags glib-2.0`
+#LDFLAGS=`pkg-config --libs glib-2.0`
+SOURCES=$(shell echo ../*/*.c)
 OBJECTS=$(SOURCES:.c=.o)
 
 all: $(TARGET)

@@ -11,8 +11,8 @@
 double sig(double x);
 
 double sig(double x) {
-    if (x < 0.0) return -x;
-    return x;
+    if (x < 0.0) return -1.0;
+    return 1.0;
 }
 
 double g(double h, int tipo) {
@@ -20,8 +20,7 @@ double g(double h, int tipo) {
         case 1:
             return h;
         case 2:
-            /*sig((exp(h) - exp(-h)) / (exp(h) + exp(-h)))*/
-            return sig(tanh(h));
+            return sig(h);
         default:
             /*(exp(h) - exp(-h)) / (exp(h) + exp(-h))*/
             return tanh(h);
