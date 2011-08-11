@@ -5,23 +5,18 @@
  *
  */
 
-#include "generadores.h"
-#include "redPerceptron.h"
+#include "lib/generadores.h"
+#include "lib/otraLibMas.h"
+#include "perceptron/redPerceptron.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-double dabs2(double x);
 void pasarABitsYParidad(int cantMuest, int intATransformar, double* in, double* res);
 void mezclameLasCartas(int *inEnInt, int p, long* sem);
 int ejer1(int tamIn, int conMomento, int printRN);
 int ejer2(int tamIn, int cantMuest, int conMomento, int printRN);
 int ejer3(int tamIn, int conMomento, int printRN);
-
-double dabs2(double x) {
-    if (x < 0.0) return -x;
-    return x;
-}
 
 void mezclameLasCartas(int *inEnInt, int p, long* sem) {
     int i = 0;
@@ -71,23 +66,26 @@ int ejer1(int tamIn, int conMomento, int printRN) {
         tipoNuronas[1] = 0;
         tipoNuronas[2] = 0;
         for (p = paso; p < totalCombinaciones; p = p + paso) {
-            int ok = 1000;
+            int ok = 1000, numDeIntentos = 300;
             acum = 0.0;
             tot = 0.0;
             mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
             for (j = 0; j < 5000 && ok; j++) {
-                int resto = ((j * p) % totalCombinaciones), numDeIntentos = 300;
-                red = rperc_create(2, numNeuronas, tipoNuronas, NULL, &sem);
+                int resto = ((j * p) % totalCombinaciones);
                 if (totalCombinaciones <= resto + p)
                     mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
+                red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
                 if (red) {
+                    if (conMomento);
+                    else rperc_set_alfaMomento(red, .0);
                     for (k = 0; k < p; k++)
                         pasarABitsYParidad(tamIn, inEnInt[k + resto], in[k], res[k]);
-                    if (rperc_aprender(red, numDeIntentos, p, in, res, conMomento, batch)) {
+                    rperc_set_rectaError(red, numDeIntentos, .1, .999, 0);
+                    if (rperc_aprender(red, p, in, res, batch)) {
                         tot = tot + 1.0;
                         pasarABitsYParidad(tamIn, inEnInt[k], in[0], res[0]);
                         test = rperc_eval(red, in[0]);
-                        if (dabs2(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
+                        if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
                         free(test);
                         if (j == 4999 && printRN) {
                             char *str = rperc_to_str(red);
@@ -138,38 +136,39 @@ int ejer2(int tamIn, int cantMuest, int conMomento, int printRN) {
         tipoNuronas[1] = 0;
         tipoNuronas[2] = 1;
         /** /for (p = 5; p < 21; p *= 2) {*/
-            acum = 0.0;
-            tot = 0.0;
-            /* Esto aca no hace falta deberia ser f(x) x[1;5] */
-            mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
-            for (j = 0; j < 5000 && ok; j++) {
-                int resto = ((j * p) % totalCombinaciones), numDeIntentos = 300;
-                red = rperc_create(2, numNeuronas, tipoNuronas, NULL, &sem);
-                if (totalCombinaciones <= resto + p)
-                    mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
-                if (red) {
-                    for (k = 0; k < p; k++)
-                        pasarABitsYParidad(cantMuest, inEnInt[k + resto], in[k], res[k]);
-                    if (rperc_aprender(red, numDeIntentos, p, in, res, conMomento, online)) {
-                        tot = tot + 1.0;
-                        pasarABitsYParidad(cantMuest, inEnInt[k], in[0], res[0]);
-                        test = rperc_eval(red, in[0]);
-                        if (dabs2(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
-                        free(test);
-                        if (j == 4999 && printRN) {
-                            char *str = rperc_to_str(red);
-                            printf("%s\n", str);
-                            free(str);
-                        }
-                        red = rperc_destroy(red);
-                    } else if (numDeIntentos < 3100) numDeIntentos += 3;
-                    else if (ok) ok--;
-                } else printf("OO OOO\n");
-            }
-            if (ok) {
-                acum = acum / tot;
-                printf("%f\t%f\n", ((double) p) / ((double) totalCombinaciones), acum);
-            } else printf("FAIL!!!\n");
+        acum = 0.0;
+        tot = 0.0;
+        if (numNeuronas[0] && tipoNuronas[0]) printf("Estaaaa!!!\n");
+        /* Esto aca no hace falta deberia ser f(x) x[1;5] */
+        mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
+        for (j = 0; j < 5000 && ok; j++) {
+            int resto = ((j * p) % totalCombinaciones), numDeIntentos = 300;
+            /** /red = rperc_create(2, numNeuronas, tipoNuronas, NULL, &sem);/ **/
+            if (totalCombinaciones <= resto + p)
+                mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
+            if (red) {
+                for (k = 0; k < p; k++)
+                    pasarABitsYParidad(cantMuest, inEnInt[k + resto], in[k], res[k]);
+                if (0/** /rperc_aprender(red, numDeIntentos, p, in, res, conMomento, online)/ **/) {
+                    tot = tot + 1.0;
+                    pasarABitsYParidad(cantMuest, inEnInt[k], in[0], res[0]);
+                    test = rperc_eval(red, in[0]);
+                    if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
+                    free(test);
+                    if (j == 4999 && printRN) {
+                        char *str = rperc_to_str(red);
+                        printf("%s\n", str);
+                        free(str);
+                    }
+                    red = rperc_destroy(red);
+                } else if (numDeIntentos < 3100) numDeIntentos += 3;
+                else if (ok) ok--;
+            } else printf("OO OOO\n");
+        }
+        if (ok) {
+            acum = acum / tot;
+            printf("%f\t%f\n", ((double) p) / ((double) totalCombinaciones), acum);
+        } else printf("FAIL!!!\n");
         /*}*/
         for (i = 0; i < cantMuest; i++) {
             free(res[i]);
