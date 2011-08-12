@@ -15,7 +15,7 @@
 void pasarABitsYParidad(int cantMuest, int intATransformar, double* in, double* res);
 void mezclameLasCartas(int *inEnInt, int p, long* sem);
 int ejer1(int tamIn, int conMomento, int printRN);
-int ejer2(int tamIn, int cantMuest, int conMomento, int printRN);
+int ejer2(int hypORln, int p, int conMomento, int printRN);
 int ejer3(int tamIn, int conMomento, int printRN);
 
 void mezclameLasCartas(int *inEnInt, int p, long* sem) {
@@ -66,7 +66,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
         tipoNuronas[1] = 0;
         tipoNuronas[2] = 0;
         for (p = paso; p < totalCombinaciones; p = p + paso) {
-            int ok = 1000, numDeIntentos = 300;
+            int ok = 2200, numDeIntentos = 500;
             acum = 0.0;
             tot = 0.0;
             mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
@@ -80,7 +80,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                     else rperc_set_alfaMomento(red, .0);
                     for (k = 0; k < p; k++)
                         pasarABitsYParidad(tamIn, inEnInt[k + resto], in[k], res[k]);
-                    rperc_set_rectaError(red, numDeIntentos, .1, .999, 0);
+                    rperc_set_rectaError(red, numDeIntentos, .45, .999, 0);
                     if (rperc_aprender(red, p, in, res, batch)) {
                         tot = tot + 1.0;
                         pasarABitsYParidad(tamIn, inEnInt[k], in[0], res[0]);
@@ -93,7 +93,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                             free(str);
                         }
                         red = rperc_destroy(red);
-                    } else if (numDeIntentos < 3100) numDeIntentos += 3;
+                    } else if (numDeIntentos < 5500) numDeIntentos += 2;
                     else if (ok) ok--;
                 } else printf("OO OOO\n");
             }
@@ -112,22 +112,21 @@ int ejer1(int tamIn, int conMomento, int printRN) {
     return 0;
 }
 
-int ejer2(int tamIn, int cantMuest, int conMomento, int printRN) {
-    int i = 0, p = 0, j = 0, k = 0, inEnInt[256/*cantMuest*/];
+int ejer2(int hypORln, int p, int conMomento, int printRN) {
+    int i = 0, j = 0, k = 0;
     double **res = NULL, **in = NULL, *test = NULL, acum = 0.0, tot = 0.0;
     long sem = -31;
-    res = (double**) calloc(cantMuest, sizeof (double*));
-    in = (double**) calloc(cantMuest, sizeof (double*));
+    res = (double**) calloc(p, sizeof (double*));
+    in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
         rperc_t red = NULL;
-        int numNeuronas[3], tipoNuronas[3]/*, paso = pow(2, cantMuest - 3)*/
-                , totalCombinaciones = pow(2, cantMuest), ok = 1000;
-        for (i = 0; i < cantMuest; i++) {
+        int numNeuronas[3], tipoNuronas[3];
+        for (i = 0; i < p; i++) {
             res[i] = (double*) calloc(1, sizeof (double));
             in[i] = (double*) calloc(1, sizeof (double));
         }
         numNeuronas[0] = 1;
-        if (tamIn)
+        if (hypORln)
             numNeuronas[1] = 4;
         else
             numNeuronas[1] = 6;
@@ -140,37 +139,30 @@ int ejer2(int tamIn, int cantMuest, int conMomento, int printRN) {
         tot = 0.0;
         if (numNeuronas[0] && tipoNuronas[0]) printf("Estaaaa!!!\n");
         /* Esto aca no hace falta deberia ser f(x) x[1;5] */
-        mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
-        for (j = 0; j < 5000 && ok; j++) {
-            int resto = ((j * p) % totalCombinaciones), numDeIntentos = 300;
-            /** /red = rperc_create(2, numNeuronas, tipoNuronas, NULL, &sem);/ **/
-            if (totalCombinaciones <= resto + p)
-                mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
+        for (j = 0; j < 5000; j++) {
+            int numDeIntentos = 300;
+            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
             if (red) {
+                double err = ((double) (numNeuronas[1] - 2)) / 200.0;
+                if (!conMomento) rperc_set_alfaMomento(red, .0);
+                rperc_set_rectaError(red, numDeIntentos, err, err, 0);
                 for (k = 0; k < p; k++)
-                    pasarABitsYParidad(cantMuest, inEnInt[k + resto], in[k], res[k]);
-                if (0/** /rperc_aprender(red, numDeIntentos, p, in, res, conMomento, online)/ **/) {
-                    tot = tot + 1.0;
-                    pasarABitsYParidad(cantMuest, inEnInt[k], in[0], res[0]);
-                    test = rperc_eval(red, in[0]);
-                    if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
-                    free(test);
-                    if (j == 4999 && printRN) {
-                        char *str = rperc_to_str(red);
-                        printf("%s\n", str);
-                        free(str);
-                    }
-                    red = rperc_destroy(red);
-                } else if (numDeIntentos < 3100) numDeIntentos += 3;
-                else if (ok) ok--;
+                    if (rperc_aprender(red, p, in, res, online)) {
+                        tot = tot + 1.0;
+                        test = rperc_eval(red, in[0]);
+                        if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
+                        free(test);
+                        if (j == 4999 && printRN) {
+                            char *str = rperc_to_str(red);
+                            printf("%s\n", str);
+                            free(str);
+                        }
+                        red = rperc_destroy(red);
+                    } else if (numDeIntentos < 3100) numDeIntentos += 3;
             } else printf("OO OOO\n");
         }
-        if (ok) {
-            acum = acum / tot;
-            printf("%f\t%f\n", ((double) p) / ((double) totalCombinaciones), acum);
-        } else printf("FAIL!!!\n");
         /*}*/
-        for (i = 0; i < cantMuest; i++) {
+        for (i = 0; i < p; i++) {
             free(res[i]);
             free(in[i]);
         }
@@ -204,7 +196,7 @@ int main(int argc, char** argv) {
             i++;
             printRN = 1;
         } else {
-            printf("No me gusto el \"%s\"\nDebe ingresar:\n\t-N[n] <num_de_ejer>\n\n", argv[i]);
+            printf("No me gusto el \"%s\"\nDebe ingresar:\n\t-E[n] <num_de_ejer>\n\n", argv[i]);
             todo_bien = 0;
         }
         i++;
