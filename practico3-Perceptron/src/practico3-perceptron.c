@@ -147,17 +147,19 @@ int ejer2(int hypORln, int p, int conMomento, int printRN) {
         red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
         if (red) {
             double err = ((double) (numNeuronas[1] - 2)) / 200.0;
+            int numIntentos=0;
             if (!conMomento) rperc_set_alfaMomento(red, .0);
-            rperc_set_rectaError(red, 1000, err, err, 0);
-            if (rperc_aprender(red, p, in, res, online)) {
-                printf("red(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", p);
+            rperc_set_rectaError(red, 100000, err, err, 0);
+            numIntentos=rperc_aprender(red, p, in, res, online);
+            if (numIntentos) {
+                printf("Intentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", numIntentos,p);
                 for (i = 0; i < p; i++) {
                     test = rperc_eval(red, in[i]);
                     printf("%f\t%f\n", in[i][0], test[0]);
                     free(test);
                 }
                 printf("\nred(x): x in [1,5]:\n\n");
-                for (i = 0; i < p; i++) {
+                for (i = 0; i < 100; i++) {
                     double x = 1.0 + ((double) i)*.04;
                     test = rperc_eval(red, &x);
                     printf("%f\t%f\n", x, test[0]);
