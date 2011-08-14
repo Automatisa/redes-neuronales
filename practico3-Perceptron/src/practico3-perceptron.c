@@ -15,7 +15,7 @@
 void pasarABitsYParidad(int cantMuest, int intATransformar, double* in, double* res);
 void mezclameLasCartas(int *inEnInt, int p, long* sem);
 int ejer1(int tamIn, int conMomento, int printRN);
-int ejer2(int hypORln, int p, int conMomento, int printRN);
+int ejer2(int hypORln, int printRN);
 int ejer3(int tamIn, int conMomento, int printRN);
 
 void mezclameLasCartas(int *inEnInt, int p, long* sem) {
@@ -113,10 +113,10 @@ int ejer1(int tamIn, int conMomento, int printRN) {
     return 0;
 }
 
-int ejer2(int hypORln, int p, int conMomento, int printRN) {
-    int i = 0;
+int ejer2(int hypORln, int printRN) {
+    int i = 0, p = 20, conMomento = 1;
     double **res = NULL, **in = NULL, *test = NULL;
-    long sem = -171;
+    long sem = -71;
     res = (double**) calloc(p, sizeof (double*));
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
@@ -127,59 +127,61 @@ int ejer2(int hypORln, int p, int conMomento, int printRN) {
             in[i] = (double*) calloc(1, sizeof (double));
         }
         numNeuronas[0] = 1;
-        if (hypORln) {
-            numNeuronas[1] = 4;
-            for (i = 0; i < p; i++) {
-                in[i][0] = 1.0 + ran2(&sem)*4.0;
-                res[i][0] = 1.0 / in[i][0];
-            }
-        } else {
-            numNeuronas[1] = 6;
-            for (i = 0; i < p; i++) {
-                in[i][0] = 1.0 + ran2(&sem)*4.0;
-                res[i][0] = log(in[i][0]);
-            }
-        }
         numNeuronas[2] = 1;
         tipoNuronas[0] = 0;
         tipoNuronas[1] = 0;
         tipoNuronas[2] = 1;
-        red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
-        if (red) {
-            double err = ((double) (numNeuronas[1] - 2)) / 200.0;
-            int numIntentos=0;
-            if (!conMomento) rperc_set_alfaMomento(red, .0);
-            rperc_set_rectaError(red, 100000, err, err, 0);
-            numIntentos=rperc_aprender(red, p, in, res, online);
-            if (numIntentos) {
-                printf("Intentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", numIntentos,p);
+        for (p = 5; p < 24; p *= 2) {
+            if (hypORln) {
+                numNeuronas[1] = 4;
                 for (i = 0; i < p; i++) {
-                    test = rperc_eval(red, in[i]);
-                    printf("%f\t%f\n", in[i][0], test[0]);
-                    free(test);
+                    in[i][0] = 1.0 + ran2(&sem)*4.0;
+                    res[i][0] = 1.0 / in[i][0];
                 }
-                printf("\nred(x): x in [1,5]:\n\n");
-                for (i = 0; i < 100; i++) {
-                    double x = 1.0 + ((double) i)*.04;
-                    test = rperc_eval(red, &x);
-                    printf("%f\t%f\n", x, test[0]);
-                    free(test);
+            } else {
+                numNeuronas[1] = 6;
+                for (i = 0; i < p; i++) {
+                    in[i][0] = 1.0 + ran2(&sem)*4.0;
+                    res[i][0] = log(in[i][0]);
                 }
-                printf("\nf(x):\n\n");
-                for (i = 0; i < 100; i++) {
-                    double x = 1.0 + ((double) i)*.04;
-                    if (hypORln) printf("%f\t%f\n", x, 1.0 / x);
-                    else printf("%f\t%f\n", x, log(x));
+            }
+            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
+            if (red) {
+                double err = ((double) (numNeuronas[1] - 2)) / 200.0;
+                int numIntentos = 0;
+                if (!conMomento) rperc_set_alfaMomento(red, .0);
+                rperc_set_rectaError(red, 100000, err, err, 0);
+                numIntentos = rperc_aprender(red, p, in, res, online);
+                if (numIntentos) {
+                    printf("f(x):\n\n");
+                    for (i = 0; i < 100 && p < 10; i++) {
+                        double x = 1.0 + ((double) i)*.04;
+                        if (hypORln) printf("%f\t%f\n", x, 1.0 / x);
+                        else printf("%f\t%f\n", x, log(x));
 
-                }
-                if (printRN) {
-                    char *str = rperc_to_str(red);
-                    printf("%s\n\n\n", str);
-                    free(str);
-                }
-            } else printf("No aprendí :-S :'(  TT__TT\n");
-            red = rperc_destroy(red);
-        } else printf("OO OOO\n");
+                    }
+                    printf("\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", numIntentos, p);
+                    for (i = 0; i < p; i++) {
+                        test = rperc_eval(red, in[i]);
+                        printf("%f\t%f\n", in[i][0], test[0]);
+                        free(test);
+                    }
+                    printf("\nred(x): x in [1,5]:\n\n");
+                    for (i = 0; i < 100; i++) {
+                        double x = 1.0 + ((double) i)*.04;
+                        test = rperc_eval(red, &x);
+                        printf("%f\t%f\n", x, test[0]);
+                        free(test);
+                    }
+                    if (printRN) {
+                        char *str = rperc_to_str(red);
+                        printf("%s\n\n\n", str);
+                        free(str);
+                    }
+                } else printf("No aprendí :-S :'(  TT__TT\n");
+                red = rperc_destroy(red);
+            } else printf("OO OOO\n");
+        }
         for (i = 0; i < p; i++) {
             free(res[i]);
             free(in[i]);
@@ -195,7 +197,7 @@ int ejer3(int tamIn, int conMomento, int printRN) {
 }
 
 int main(int argc, char** argv) {
-    int i = 1, ejer = 0, todo_bien = 1, momento = 0, tam = 1, printRN = 0, cantMuest = 5;
+    int i = 1, ejer = 0, todo_bien = 1, momento = 0, tam = 1, printRN = 0;
     while (todo_bien && i + 1 < argc) {
         if (!strcmp(argv[i], "-E") || !strcmp(argv[i], "-e")) {
             i++;
@@ -206,9 +208,6 @@ int main(int argc, char** argv) {
         } else if (!strcmp(argv[i], "-M") || !strcmp(argv[i], "-m")) {
             i++;
             momento = atoi(argv[i]);
-        } else if (!strcmp(argv[i], "-K") || !strcmp(argv[i], "-k")) {
-            i++;
-            cantMuest = atoi(argv[i]);
         } else if (!strcmp(argv[i], "-P") || !strcmp(argv[i], "-p") ||
                 !strcmp(argv[i], "-V") || !strcmp(argv[i], "-v")) {
             i++;
@@ -222,7 +221,7 @@ int main(int argc, char** argv) {
     if (todo_bien) {
         switch (ejer) {
             case 2:
-                ejer2(tam, cantMuest, momento, printRN);
+                ejer2(tam, printRN);
                 break;
             case 3:
                 ejer3(tam, momento, printRN);

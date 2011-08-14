@@ -84,7 +84,7 @@
 @timestamp rot 0
 @timestamp font 0
 @timestamp char size 1.000000
-@timestamp def "Fri Aug 12 15:45:22 2011"
+@timestamp def "Sun Aug 14 09:28:41 2011"
 @r0 off
 @link r0 to g0
 @r0 type above
@@ -253,7 +253,7 @@
 @    altyaxis  off
 @    legend on
 @    legend loctype view
-@    legend 0.85, 0.8
+@    legend 0.2, 0.8
 @    legend box color 1
 @    legend box pattern 1
 @    legend box linewidth 1.0
@@ -289,7 +289,7 @@
 @    s0 symbol skip 0
 @    s0 line type 1
 @    s0 line linestyle 1
-@    s0 line linewidth 1.5
+@    s0 line linewidth 2.0
 @    s0 line color 15
 @    s0 line pattern 1
 @    s0 baseline type 0
@@ -322,14 +322,14 @@
 @    s0 errorbar riser clip off
 @    s0 errorbar riser clip length 0.100000
 @    s0 comment "/home/nahuel/Dropbox/redes-neuronales/famaf-redes-neuronales/practico3-Perceptron/dat/ejer1-N4_agos.dat"
-@    s0 legend  ""
+@    s0 legend  "N = 4"
 @    s1 hidden false
 @    s1 type xy
-@    s1 symbol 3
+@    s1 symbol 7
 @    s1 symbol size 0.660000
-@    s1 symbol color 3
+@    s1 symbol color 4
 @    s1 symbol pattern 1
-@    s1 symbol fill color 3
+@    s1 symbol fill color 4
 @    s1 symbol fill pattern 1
 @    s1 symbol linewidth 1.0
 @    s1 symbol linestyle 1
@@ -338,8 +338,8 @@
 @    s1 symbol skip 0
 @    s1 line type 1
 @    s1 line linestyle 1
-@    s1 line linewidth 1.5
-@    s1 line color 3
+@    s1 line linewidth 2.0
+@    s1 line color 4
 @    s1 line pattern 1
 @    s1 baseline type 0
 @    s1 baseline off
@@ -361,7 +361,7 @@
 @    s1 avalue offset 0.000000 , 0.000000
 @    s1 errorbar on
 @    s1 errorbar place both
-@    s1 errorbar color 3
+@    s1 errorbar color 4
 @    s1 errorbar pattern 1
 @    s1 errorbar size 1.000000
 @    s1 errorbar linewidth 1.0
@@ -370,8 +370,8 @@
 @    s1 errorbar riser linestyle 1
 @    s1 errorbar riser clip off
 @    s1 errorbar riser clip length 0.100000
-@    s1 comment "/home/nahuel/Dropbox/redes-neuronales/famaf-redes-neuronales/practico3-Perceptron/dat/ejer1-N8-conMomento_agos.dat"
-@    s1 legend  ""
+@    s1 comment "/home/nahuel/Dropbox/redes-neuronales/famaf-redes-neuronales/practico3-Perceptron/dat/ejer1-N6_agos.dat"
+@    s1 legend  "N = 6"
 @    s2 hidden false
 @    s2 type xy
 @    s2 symbol 3
@@ -387,7 +387,7 @@
 @    s2 symbol skip 0
 @    s2 line type 1
 @    s2 line linestyle 1
-@    s2 line linewidth 1.5
+@    s2 line linewidth 2.0
 @    s2 line color 2
 @    s2 line pattern 1
 @    s2 baseline type 0
@@ -420,14 +420,14 @@
 @    s2 errorbar riser clip off
 @    s2 errorbar riser clip length 0.100000
 @    s2 comment "/home/nahuel/Dropbox/redes-neuronales/famaf-redes-neuronales/practico3-Perceptron/dat/ejer1-N8_agos.dat"
-@    s2 legend  ""
+@    s2 legend  "N = 8"
 @    s3 hidden false
 @    s3 type xy
-@    s3 symbol 7
+@    s3 symbol 3
 @    s3 symbol size 0.660000
-@    s3 symbol color 4
+@    s3 symbol color 3
 @    s3 symbol pattern 1
-@    s3 symbol fill color 4
+@    s3 symbol fill color 3
 @    s3 symbol fill pattern 1
 @    s3 symbol linewidth 1.0
 @    s3 symbol linestyle 1
@@ -436,8 +436,8 @@
 @    s3 symbol skip 0
 @    s3 line type 1
 @    s3 line linestyle 1
-@    s3 line linewidth 1.5
-@    s3 line color 4
+@    s3 line linewidth 2.0
+@    s3 line color 3
 @    s3 line pattern 1
 @    s3 baseline type 0
 @    s3 baseline off
@@ -459,7 +459,7 @@
 @    s3 avalue offset 0.000000 , 0.000000
 @    s3 errorbar on
 @    s3 errorbar place both
-@    s3 errorbar color 4
+@    s3 errorbar color 3
 @    s3 errorbar pattern 1
 @    s3 errorbar size 1.000000
 @    s3 errorbar linewidth 1.0
@@ -468,8 +468,8 @@
 @    s3 errorbar riser linestyle 1
 @    s3 errorbar riser clip off
 @    s3 errorbar riser clip length 0.100000
-@    s3 comment "/home/nahuel/Dropbox/redes-neuronales/famaf-redes-neuronales/practico3-Perceptron/dat/ejer1-N6_agos.dat"
-@    s3 legend  ""
+@    s3 comment "/home/nahuel/Dropbox/redes-neuronales/famaf-redes-neuronales/practico3-Perceptron/dat/ejer1-N8-conMomento_agos.dat"
+@    s3 legend  "N = 8 (Con Momento)"
 @target G0.S0
 @type xy
 0.125 0.5034
@@ -482,13 +482,13 @@
 &
 @target G0.S1
 @type xy
-0.125 0.536977
-0.25 0.634343
-0.375 0.758657
-0.5 0.877696
-0.625 0.858658
-0.75 0.989303
-0.875 0.999628
+0.125 0.517158
+0.25 0.582966
+0.375 0.690155
+0.5 0.752036
+0.625 0.827137
+0.75 0.917942
+0.875 0.978713
 &
 @target G0.S2
 @type xy
@@ -502,11 +502,11 @@
 &
 @target G0.S3
 @type xy
-0.125 0.517158
-0.25 0.582966
-0.375 0.690155
-0.5 0.752036
-0.625 0.827137
-0.75 0.917942
-0.875 0.978713
+0.125 0.536977
+0.25 0.634343
+0.375 0.758657
+0.5 0.877696
+0.625 0.858658
+0.75 0.989303
+0.875 0.999628
 &
