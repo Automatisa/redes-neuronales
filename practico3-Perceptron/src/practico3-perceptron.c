@@ -153,12 +153,14 @@ int ejer2(int hypORln, int printRN) {
                 rperc_set_rectaError(red, 100000, err, err, 0);
                 numIntentos = rperc_aprender(red, p, in, res, online);
                 if (numIntentos) {
-                    printf("f(x):\n\n");
-                    for (i = 0; i < 100 && p < 10; i++) {
-                        double x = 1.0 + ((double) i)*.04;
-                        if (hypORln) printf("%f\t%f\n", x, 1.0 / x);
-                        else printf("%f\t%f\n", x, log(x));
+                    if (p < 10) {
+                        printf("f(x):\n\n");
+                        for (i = 0; i < 100; i++) {
+                            double x = 1.0 + ((double) i)*.04;
+                            if (hypORln) printf("%f\t%f\n", x, 1.0 / x);
+                            else printf("%f\t%f\n", x, log(x));
 
+                        }
                     }
                     printf("\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", numIntentos, p);
                     for (i = 0; i < p; i++) {
@@ -182,6 +184,7 @@ int ejer2(int hypORln, int printRN) {
                 red = rperc_destroy(red);
             } else printf("OO OOO\n");
         }
+        p = 20;
         for (i = 0; i < p; i++) {
             free(res[i]);
             free(in[i]);
