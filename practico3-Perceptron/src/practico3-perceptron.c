@@ -16,7 +16,7 @@ void pasarABitsYParidad(int cantMuest, int intATransformar, double* in, double* 
 void mezclameLasCartas(int *inEnInt, int p, long* sem);
 int ejer1(int tamIn, int conMomento, int printRN);
 int ejer2(int hypORln, int printRN);
-int ejer3(int tamIn, int conMomento, int printRN);
+int ejer3(void);
 
 void mezclameLasCartas(int *inEnInt, int p, long* sem) {
     int i = 0;
@@ -116,7 +116,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
 int ejer2(int hypORln, int printRN) {
     int i = 0, p = 20, conMomento = 1;
     double **res = NULL, **in = NULL, *test = NULL;
-    long sem = -71;
+    long sem = -131;
     res = (double**) calloc(p, sizeof (double*));
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
@@ -195,7 +195,59 @@ int ejer2(int hypORln, int printRN) {
     return 0;
 }
 
-int ejer3(int tamIn, int conMomento, int printRN) {
+int ejer3(void) {
+    int i = 0, j = 0, p = 8, conMomento = 1;
+    double **res = NULL, **in = NULL;
+    long sem = -131;
+    res = (double**) calloc(p, sizeof (double*));
+    in = (double**) calloc(p, sizeof (double*));
+    if (res && in) {
+        rperc_t red = NULL;
+        int numNeuronas[3], tipoNuronas[3];
+        for (i = 0; i < p; i++) {
+            res[i] = (double*) calloc(p, sizeof (double));
+            in[i] = (double*) calloc(p, sizeof (double));
+        }
+        for (i = 0; i < p; i++)
+            for (j = 0; j < p; j++) {
+                if (i == j) {
+                    in[i][j] = 1.0;
+                    res[i][j] = 1.0;
+                } else {
+                    in[i][j] = -1.0;
+                    res[i][j] = -1.0;
+                }
+            }
+        numNeuronas[0] = 8;
+        numNeuronas[2] = 8;
+        tipoNuronas[0] = 0;
+        tipoNuronas[1] = 0;
+        tipoNuronas[2] = 0;
+        for (p = 0; p < 2; p++) {
+            numNeuronas[1] = 3 + p * 2;
+            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
+            if (red) {
+                int numIntentos = 0;
+                if (!conMomento) rperc_set_alfaMomento(red, .0);
+                rperc_set_rectaError(red, 100000, .015, .0199, 0);
+                numIntentos = rperc_aprender(red, 8, in, res, online);
+                if (numIntentos) {
+                    char *str = NULL;
+                    str = rperc_to_str(red);
+                    printf("%s\n\n", str);
+                    free(str);
+                } else printf("No aprendí :-S :'(  TT__TT\n");
+                red = rperc_destroy(red);
+            } else printf("OO OOO\n");
+        }
+        p = 8;
+        for (i = 0; i < p; i++) {
+            free(res[i]);
+            free(in[i]);
+        }
+        free(res);
+        free(in);
+    }
     return 0;
 }
 
@@ -227,7 +279,7 @@ int main(int argc, char** argv) {
                 ejer2(tam, printRN);
                 break;
             case 3:
-                ejer3(tam, momento, printRN);
+                ejer3();
                 break;
             default:
                 if (tam < 4) tam = 4;
