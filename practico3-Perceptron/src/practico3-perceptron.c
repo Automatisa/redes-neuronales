@@ -159,7 +159,6 @@ int ejer2(int hypORln, int printRN) {
                             double x = 1.0 + ((double) i)*.04;
                             if (hypORln) printf("%f\t%f\n", x, 1.0 / x);
                             else printf("%f\t%f\n", x, log(x));
-
                         }
                     }
                     printf("\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", numIntentos, p);
@@ -203,6 +202,7 @@ int ejer3(void) {
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
         rperc_t red = NULL;
+        char strFiles[2][60] = {"../dat/redCodificadoraPract3Ejer3-8a3a8.rnp", "../dat/redCodificadoraPract3Ejer3-8a5a8.rnp"};
         int numNeuronas[3], tipoNuronas[3];
         for (i = 0; i < p; i++) {
             res[i] = (double*) calloc(p, sizeof (double));
@@ -225,7 +225,7 @@ int ejer3(void) {
         tipoNuronas[2] = 0;
         for (p = 0; p < 2; p++) {
             numNeuronas[1] = 3 + p * 2;
-            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
+            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, strFiles[p], &sem);
             if (red) {
                 int numIntentos = 0;
                 if (!conMomento) rperc_set_alfaMomento(red, .0);
@@ -234,7 +234,8 @@ int ejer3(void) {
                 if (numIntentos) {
                     char *str = NULL;
                     str = rperc_to_str(red);
-                    printf("%s\n\n", str);
+                    rperc_save(red, NULL);
+                    printf("Num de Intentos: %i\n%s\n\n", numIntentos, str);
                     free(str);
                 } else printf("No aprendí :-S :'(  TT__TT\n");
                 red = rperc_destroy(red);
