@@ -1,4 +1,4 @@
 svn co https://svn.bettercodes.org/neural-network/trunk/perceptron/src perceptron
-svn co https://svn.bettercodes.org/neural-network/trunk/perceptron/lib lib
+svn co https://svn.bettercodes.org/neural-network/trunk/lib lib
 svn co https://svn.bettercodes.org/neural-network/trunk/PrincipalComponent/src pca
 
