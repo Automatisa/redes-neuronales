@@ -86,7 +86,8 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                         tot = tot + 1.0;
                         pasarABitsYParidad(tamIn, inEnInt[k], in[0], res[0]);
                         test = rperc_eval(red, in[0]);
-                        if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
+                        //if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
+						acum = acum + (dabs(res[0][0] - test[0]) / 2.0);
                         free(test);
                         if (j == 4999 && printRN) {
                             char *str = rperc_to_str(red);
@@ -234,7 +235,7 @@ int ejer3(void) {
                 if (numIntentos) {
                     char *str = NULL;
                     str = rperc_to_str(red);
-                    rperc_save(red, NULL);
+                    rperc_save_plaintext(red, NULL);
                     printf("Num de Intentos: %i\n%s\n\n", numIntentos, str);
                     free(str);
                 } else printf("No aprendí :-S :'(  TT__TT\n");
