@@ -86,7 +86,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                         tot = tot + 1.0;
                         pasarABitsYParidad(tamIn, inEnInt[k], in[0], res[0]);
                         test = rperc_eval(red, in[0]);
-                        //if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;
+                        /** /if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;/ **/
 						acum = acum + (dabs(res[0][0] - test[0]) / 2.0);
                         free(test);
                         if (j == 4999 && printRN) {
