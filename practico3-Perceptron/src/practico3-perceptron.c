@@ -53,8 +53,9 @@ int ejer1(int tamIn, int conMomento, int printRN) {
     in = (double**) calloc(260, sizeof (double*));
     if (res && in) {
         rperc_t red = NULL;
-        int numNeuronas[3], tipoNuronas[3], paso = pow(2, tamIn - 3)
+        int numNeuronas[3], paso = pow(2, tamIn - 3)
                 , totalCombinaciones = pow(2, tamIn);
+        neuralType tipoNeuronas[3];
         for (i = 0; i < 260; i++) {
             res[i] = (double*) calloc(1, sizeof (double));
             in[i] = (double*) calloc(8, sizeof (double));
@@ -62,9 +63,9 @@ int ejer1(int tamIn, int conMomento, int printRN) {
         numNeuronas[0] = tamIn;
         numNeuronas[1] = tamIn;
         numNeuronas[2] = 1;
-        tipoNuronas[0] = 0;
-        tipoNuronas[1] = 0;
-        tipoNuronas[2] = 0;
+        tipoNeuronas[0] = tanhyp;
+        tipoNeuronas[1] = tanhyp;
+        tipoNeuronas[2] = tanhyp;
         for (p = paso; p < totalCombinaciones; p = p + paso) {
             int ok = 2200, numDeIntentos = 500;
             acum = 0.0;
@@ -75,7 +76,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                 if (totalCombinaciones <= resto + p)
                     mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
                 red = rperc_destroy(red);
-                red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
+                red = rperc_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
                 if (red) {
                     if (conMomento);
                     else rperc_set_alfaMomento(red, .0);
@@ -122,16 +123,17 @@ int ejer2(int hypORln, int printRN) {
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
         rperc_t red = NULL;
-        int numNeuronas[3], tipoNuronas[3];
+        int numNeuronas[3];
+        neuralType tipoNeuronas[3];
         for (i = 0; i < p; i++) {
             res[i] = (double*) calloc(1, sizeof (double));
             in[i] = (double*) calloc(1, sizeof (double));
         }
         numNeuronas[0] = 1;
         numNeuronas[2] = 1;
-        tipoNuronas[0] = 0;
-        tipoNuronas[1] = 0;
-        tipoNuronas[2] = 1;
+        tipoNeuronas[0] = tanhyp;
+        tipoNeuronas[1] = tanhyp;
+        tipoNeuronas[2] = lineal;
         for (p = 5; p < 24; p *= 2) {
             if (hypORln) {
                 numNeuronas[1] = 4;
@@ -146,7 +148,7 @@ int ejer2(int hypORln, int printRN) {
                     res[i][0] = log(in[i][0]);
                 }
             }
-            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
+            red = rperc_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
             if (red) {
                 double err = ((double) (numNeuronas[1] - 2)) / 200.0;
                 int numIntentos = 0;
@@ -204,7 +206,8 @@ int ejer3(void) {
     if (res && in) {
         rperc_t red = NULL;
         char strFiles[2][60] = {"../dat/redCodificadoraPract3Ejer3-8a3a8.rnp", "../dat/redCodificadoraPract3Ejer3-8a5a8.rnp"};
-        int numNeuronas[3], tipoNuronas[3];
+        int numNeuronas[3];
+        neuralType tipoNeuronas[3];
         for (i = 0; i < p; i++) {
             res[i] = (double*) calloc(p, sizeof (double));
             in[i] = (double*) calloc(p, sizeof (double));
@@ -221,12 +224,12 @@ int ejer3(void) {
             }
         numNeuronas[0] = 8;
         numNeuronas[2] = 8;
-        tipoNuronas[0] = 0;
-        tipoNuronas[1] = 0;
-        tipoNuronas[2] = 0;
+        tipoNeuronas[0] = tanhyp;
+        tipoNeuronas[1] = tanhyp;
+        tipoNeuronas[2] = tanhyp;
         for (p = 0; p < 2; p++) {
             numNeuronas[1] = 3 + p * 2;
-            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, strFiles[p], &sem);
+            red = rperc_create(2, numNeuronas, tipoNeuronas, NULL, strFiles[p], &sem);
             if (red) {
                 int numIntentos = 0;
                 if (!conMomento) rperc_set_alfaMomento(red, .0);
