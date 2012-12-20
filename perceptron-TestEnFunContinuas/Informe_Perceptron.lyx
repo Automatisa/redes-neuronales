@@ -1,0 +1,865 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\begin_modules
+theorems-ams
+eqs-within-sections
+figs-within-sections
+\end_modules
+\maintain_unincluded_children false
+\language spanish
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 0
+\index Índice
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+\begin_inset VSpace vfill
+\end_inset
+
+
+\family sans
+\series bold
+\size giant
+REDES NEURONALES
+\begin_inset Newline newline
+\end_inset
+
+Practico Final
+\begin_inset Newline newline
+\end_inset
+
+
+\family default
+\series default
+Red Feedforward Multicapas
+\begin_inset Newline newline
+\end_inset
+
+Análisis sobre Funciones Continuas 
+\size default
+
+\begin_inset VSpace vfill
+\end_inset
+
+
+\end_layout
+
+\begin_layout Author
+Prof: F.
+ A.
+ Tamarit
+\begin_inset Newline newline
+\end_inset
+
+Autor: Eric N.
+ Jurio
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part*
+Introducción
+\end_layout
+
+\begin_layout Standard
+Este trabajo esta basado en la aplicación de redes neuronales feedforward
+ multicapas aplicadas funciones continuas.
+ Este tema fue planteado en el practico 3 de la asignatura, pero ahora lo
+ analizaremos algunas características y problemas que no se plantearon en
+ el practico anterior.
+\end_layout
+
+\begin_layout Section*
+Las redes neuronales Feedforward
+\end_layout
+
+\begin_layout Standard
+La red neuronal feedforward fue el primer tipo y posiblemente el más simple
+ de red neuronal artificial ideado.
+ En esta red, la información se mueve en una sola dirección (hacia adelante),
+ a partir de los nodos de entrada, a través de los nodos ocultos (si los
+ hay) terminando en los nodos de salida.
+ Como característica principal destacamos que es un red sin bucles de flujo
+ de información.
+\end_layout
+
+\begin_layout Standard
+Están inspiradas en redes neuronales biológicas (en particular, en el sistema
+ nervioso de los animales).
+\end_layout
+
+\begin_layout Standard
+Este tipo de redes son aplicada para aprendizaje de patrones, mapeo de funciones
+ (control) y clasificación, principalmente.
+ Una de las aplicaciones que tiene es para el aprendizaje de funciones con
+ su dominio e imagen en espacios n-dimencionales de tipo binario, por eso
+ estas redes son también conocidas como redes perceptron.
+ Pero el modelo no limita solo a casos binarios, ya que se puede variar
+ la función de activación de las neuronas (neuronas binarias, lineales,
+ continuas derivables no lineales, etc).
+\end_layout
+
+\begin_layout Standard
+En particular en este trabajo planteamos la hipótesis de que la correcta
+ selección de la función de activación de las neurona de la red juega un
+ papel importante en los resultados del entrenamiento y de la aplicación
+ de la red, sobre todo si necesitamos hacer extrapolación de datos.
+\end_layout
+
+\begin_layout Section*
+Objetivos
+\end_layout
+
+\begin_layout Standard
+En este informe analizaremos algunos aspectos de las redes Feedforward aplicadas
+ a funciones continuas.
+ Para ello se plantean los siguientes objetivos:
+\end_layout
+
+\begin_layout Enumerate
+Aproximaremos las funciones 
+\begin_inset Formula $\tfrac{1}{x}$
+\end_inset
+
+ y 
+\begin_inset Formula $\log(x)$
+\end_inset
+
+, esta vez trataremos de extrapolar y compararemos con alternativas.
+ 
+\end_layout
+
+\begin_layout Enumerate
+¿Que tan bien podemos aproximar una función binaria (dominio en 
+\begin_inset Formula $(X;Y)$
+\end_inset
+
+) (por ejemplo 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ o 
+\begin_inset Formula $f(x,y)=\frac{x}{y}$
+\end_inset
+
+) con redes feedforward multicapas? Analizaremos distintas opciones y tomaremos
+ ejemplos de extrapolación.
+\end_layout
+
+\begin_layout Enumerate
+Analizaremos distintas opciones para aproximar la función 
+\begin_inset Formula $sinc(x)*sinc(y)=\frac{sin(x)}{x}*\frac{sin(y)}{y}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Detalles de la implementación
+\end_layout
+
+\begin_layout Standard
+He desarrollado mi propia librería open source para el modelo perceptron
+ (entre otros modelos que continuo desarrollando).
+\end_layout
+
+\begin_layout Standard
+No voy a entrar en detalles, algunas características implementadas son:
+\end_layout
+
+\begin_layout Itemize
+Implementación de redes feedforward simple y multicapas.
+ (definición de numero de capas, tipo de neurona en la capa y numero de
+ neuronas por capa al momento de construcción de la red)
+\end_layout
+
+\begin_layout Itemize
+Aprendizaje de conjuntos de entrenamientos en modo batch u online.
+\end_layout
+
+\begin_layout Itemize
+Aprendizaje con momento.
+ (momento por defecto de 
+\begin_inset Formula $0.5$
+\end_inset
+
+ o seleccionable en 
+\begin_inset Formula $\left[0.0;1.0\right]$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Itemize
+Parámetro de adaptación auto-regulado en un rango preseleccionado (rango
+ por defecto 
+\begin_inset Formula $\left[0.02;0.05\right]$
+\end_inset
+
+; rango ajustable en 
+\begin_inset Formula $\left[0.0;1.0\right]$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Standard
+Para mas información de las características y del proceso de desarrollo
+ ver en la pagina del proyecto:
+\end_layout
+
+\begin_layout Standard
+El proyecto (en general) se encuentra en 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://bettercodes.org/projects/neural-network"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+La implementación en particular para este trabajo esta en 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://code.google.com/p/redes-neuronales/"
+
+\end_inset
+
+ (utiliza librerías del proyecto recién mencionado)
+\end_layout
+
+\begin_layout Part*
+Red Feedforward Perceptron Multicapas
+\end_layout
+
+\begin_layout Subsection*
+Aproximación de funciones continuas
+\end_layout
+
+\begin_layout Standard
+Implementé un programa de aprendizaje usando el algoritmo de backpropagation
+ (on-line) en una red neuronal con una capa oculta de 
+\begin_inset Formula $M$
+\end_inset
+
+ neuronas para aproximar funciones continuas de una variable 
+\begin_inset Formula $f(x)$
+\end_inset
+
+.
+ Como función de activación para las neuronas de la capa oculta usamos la
+ función 
+\begin_inset Formula $\tanh(x)$
+\end_inset
+
+ y para la neurona de la capa de salida usamos la función lineal: 
+\begin_inset Formula $OutNet=\sum_{i=1}^{M}(outHide_{i}*w_{i})$
+\end_inset
+
+ donde OutNet es la salida de la neurona de salida (lineal), 
+\begin_inset Formula $outHide_{i}$
+\end_inset
+
+ son las salidas de las neuronas de la capa oculta y 
+\begin_inset Formula $w_{i}$
+\end_inset
+
+ son los pesos sinápticos de entrada a la neurona lineal.
+\end_layout
+
+\begin_layout Standard
+Entrenamos sobre 
+\begin_inset Formula $p$
+\end_inset
+
+ puntos de la función tomados aleatoriamente en un intervalo finito de la
+ variable independiente 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ Imponiendo un limite de tolerancia de error de aprendizaje por patrón .
+ Aproximamos las siguientes funciones en el intervalo 
+\begin_inset Formula $x\in[1;5]$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+ con 
+\begin_inset Formula $M=4$
+\end_inset
+
+, 
+\begin_inset Formula $\epsilon=0.01$
+\end_inset
+
+ para 
+\begin_inset Formula $p=5;10;20$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+ con 
+\begin_inset Formula $M=6$
+\end_inset
+
+, 
+\begin_inset Formula $\epsilon=0.02$
+\end_inset
+
+ para 
+\begin_inset Formula $p=5;10;20$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+A continuación podemos ver las gráficas simultáneas de la función a aproximar,
+ la función de ajuste aprendida por la red y los puntos utilizados para
+ obtener dicha aproximación.
+\end_layout
+
+\begin_layout Subsubsection*
+Borrador de cálculos
+\end_layout
+
+\begin_layout Standard
+Demostración de que se puede escribir la 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ en términos de sumas constantes y funciones un-arias
+\end_layout
+
+\begin_layout Standard
+Sabemos la identidad 
+\begin_inset Formula $a^{2}-b^{2}=(a+b)*(a-b)$
+\end_inset
+
+ digamos que 
+\begin_inset Formula $x=a+b$
+\end_inset
+
+ y que 
+\begin_inset Formula $y=a-b$
+\end_inset
+
+.
+ Luego 
+\begin_inset Formula $x*y=(a+b)*(a-b)$
+\end_inset
+
+ ie.
+ 
+\begin_inset Formula $x*y=a^{2}-b^{2}$
+\end_inset
+
+.
+ Escribamos 
+\begin_inset Formula $a$
+\end_inset
+
+ en función de 
+\begin_inset Formula $x$
+\end_inset
+
+ y lo mismo con 
+\begin_inset Formula $b$
+\end_inset
+
+.
+ 
+\begin_inset Formula $a=x-b$
+\end_inset
+
+ y 
+\begin_inset Formula $b=a-y\equiv b=x-b-y\equiv b=\frac{x-y}{2}$
+\end_inset
+
+ ie.
+ 
+\begin_inset Formula $a=x-\frac{x-y}{2}\equiv a=\frac{x+y}{2}$
+\end_inset
+
+ por lo tanto 
+\begin_inset Formula $x*y=(\frac{x+y}{2})^{2}-(\frac{x-y}{2})^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Demostración de que se puede escribir la 
+\begin_inset Formula $f(x,y)=\frac{x}{y}$
+\end_inset
+
+ en términos de sumas constantes y funciones un-arias
+\end_layout
+
+\begin_layout Subsubsection*
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Aproximación de 
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A continuación las Figuras 0.2, cuatro curvas superpuestas.
+ (
+\begin_inset Formula $f(x)$
+\end_inset
+
+ y sus 3 aproximaciones)
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../practico3-Perceptron/img/ejer2a.jpg
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Aproximación de 
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+ por redes feedforward de una capa oculta, entrenadas con 
+\begin_inset Formula $5;10;20$
+\end_inset
+
+ puntos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Notamos que en general las aproximaciones son buenas excepto la aproximación
+ hecha solo por 5 puntos de entrenamientos.
+ En este caso vemos que la interpolación es buena pero la extrapolación
+ no lo es.
+ Lo apreciamos con mas detalle en las Figuras 0.3 y 0.4
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../practico3-Perceptron/img/ejer2a1.jpg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+, aproximación por redes entrenadas con 5 y 10 puntos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../practico3-Perceptron/img/ejer2a2.jpg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+, aproximación por red entrenada con 20 puntos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Aproximación de 
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A continuación las Figuras 0.5, cuatro curvas superpuestas.
+ (
+\begin_inset Formula $f(x)$
+\end_inset
+
+ y sus 3 aproximaciones)
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../practico3-Perceptron/img/ejer2b.jpg
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Aproximación de 
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+ por redes feedforward de una capa oculta, entrenadas con 
+\begin_inset Formula $5;10;20$
+\end_inset
+
+ puntos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Podemos ver que la aproximación es buena cerca de los puntos entrenados
+ y el error es más grande al alejarse.
+ Apreciamos con más detalle en las Figuras 0.6 y 0.7
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../practico3-Perceptron/img/ejer2b1.jpg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+, aproximación por redes entrenadas con 5 y 10 puntos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../practico3-Perceptron/img/ejer2b2.jpg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+, aproximación por red entrenada con 20 puntos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part*
+Conclusiones
+\end_layout
+
+\begin_layout Enumerate
+Sobre el error de generalización.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+A medida que aumenta la cantidad elementos en el conjunto de entrenamiento
+ vemos que el error se acerca más a 
+\begin_inset Formula $0$
+\end_inset
+
+.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Algo estudiado, pero que no vimos en el experimento es que en algunos casos,
+ cuando la arquitectura de la red o la/s función/es de activación de las
+ neuronas no son apropiadas, se puede dar el efecto de sobre entrenamiento,
+ en donde la red aprende bien todos los valores de entrenamiento, pero no
+ interpola ni extrapola bien.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+(para el caso finito) A mayor porcentaje cubierto de las combinaciones de
+ datos que definen la función a mapear por el conjunto de datos de entrenamiento
+, menor es el error general de la red.
+\end_layout
+
+\begin_layout Itemize
+El aprendizaje aplicando momento, resuelve algunos problemas de rebote y
+ de aprendizaje lento, disminuyendo también el error de generalización.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Para el caso de aproximar funciones continuas, notamos que en general las
+ aproximaciones son buenas siempre y cuando los datos del conjunto de entrenamie
+nto, estén bien distribuidos en el espacio objetivo que queremos representar.
+ En este caso vemos que la interpolación es buena pero la extrapolación
+ no siempre lo es.
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Cuando la cantidad de neuronas son apenas las suficientes para almacenar
+ la información requerida
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Si no tiene la cantidad necesarias de neuronas para almacenar la información
+ es de esperar que tome muchísimo más tiempo de entrenamiento y quizás nunca
+ alcance el valor esperado, dentro del rango establecido por el error aceptable
+ para los valores de entrenamiento.
+\end_layout
+
+\end_inset
+
+, podemos afirmar 2 cosas:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+El entrenamiento tomara más tiempo (iteraciones de entrenamiento) que si
+ tuviese más neuronas.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Si las neuronas son demasiadas, el entrenamiento también tardara mucho en
+ cuanto a tiempo de calculo ya que las matrices de pesos sinápticos serán
+ más grandes.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+La red puede tener pesos sinápticos muy dispares y con valores absolutos
+ muy grandes, lo que la puede hacer poco adaptable a cambios frente futuros
+ entrenamientos.
+ En redes con más capacidad de información (acorde a lo que se le quiera
+ mapear), los valores de los pesos sinápticos son mucho más homogéneos.
+\end_layout
+
+\end_deeper
+\end_body
+\end_document
