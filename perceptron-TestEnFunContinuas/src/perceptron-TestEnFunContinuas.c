@@ -5,18 +5,24 @@
  *
  */
 
-#include "lib/generadores.h"
-#include "lib/otraLibMas.h"
-#include "perceptron/redPerceptron.h"
+#include "neural-networks/lib/generadores.h"
+#include "neural-networks/lib/otraLibMas.h"
+#include "neural-networks/perceptron/perceptronNeuralNet.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-void pasarABitsYParidad(int cantMuest, int intATransformar, double* in, double* res);
+void printHelp(char* invalidOption);
+void pasarABitsYParidad(int cantMuest, int intATransformar, double* in,
+		double* res);
 void mezclameLasCartas(int *inEnInt, int p, long* sem);
 int ejer1(int tamIn, int conMomento, int printRN);
 int ejer2(int hypORln, int printRN);
 int ejer3(void);
+int ejer1F(int selecFun, int p, int printRN);
+int ejer2F(int selecFun, int p, int printRN);
+int ejer2Fpruebita(int selecFun, int p, int printRN);
+int ejer3F(int selecFun, int p, int printRN);
 
 void mezclameLasCartas(int *inEnInt, int p, long* sem) {
     int i = 0;
@@ -30,14 +36,17 @@ void mezclameLasCartas(int *inEnInt, int p, long* sem) {
     }
 }
 
-void pasarABitsYParidad(int cantMuest, int intATransformar, double* in, double* res) {
+void pasarABitsYParidad(int cantMuest, int intATransformar, double* in,
+		double* res) {
     int i = 0;
     *res = -1.0;
     for (i = 0; i < cantMuest; i++) {
         if (intATransformar % 2) {
             in[i] = 1.0;
-            if (0.0 < *res) *res = -1.0;
-            else *res = 1.0;
+			if (0.0 < *res)
+				*res = -1.0;
+			else
+				*res = 1.0;
         } else {
             in[i] = -1.0;
         }
@@ -52,10 +61,10 @@ int ejer1(int tamIn, int conMomento, int printRN) {
     res = (double**) calloc(260, sizeof (double*));
     in = (double**) calloc(260, sizeof (double*));
     if (res && in) {
-        rperc_t red = NULL;
-        int numNeuronas[3],  paso = pow(2, tamIn - 3)
-                , totalCombinaciones = pow(2, tamIn);
-        neuralType tipoNuronas[3];
+        percnn_t red = NULL;
+		int numNeuronas[3], paso = pow(2, tamIn - 3), totalCombinaciones = pow(
+				2, tamIn);
+		neuralType tipoNeuronas[3];
         for (i = 0; i < 260; i++) {
             res[i] = (double*) calloc(1, sizeof (double));
             in[i] = (double*) calloc(8, sizeof (double));
@@ -63,9 +72,9 @@ int ejer1(int tamIn, int conMomento, int printRN) {
         numNeuronas[0] = tamIn;
         numNeuronas[1] = tamIn;
         numNeuronas[2] = 1;
-        tipoNuronas[0] = tanhyp;
-        tipoNuronas[1] = tanhyp;
-        tipoNuronas[2] = tanhyp;
+		tipoNeuronas[0] = tanhyp;
+		tipoNeuronas[1] = tanhyp;
+		tipoNeuronas[2] = tanhyp;
         for (p = paso; p < totalCombinaciones; p = p + paso) {
             int ok = 2200, numDeIntentos = 500;
             acum = 0.0;
@@ -75,35 +84,44 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                 int resto = ((j * p) % totalCombinaciones);
                 if (totalCombinaciones <= resto + p)
                     mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
-                red = rperc_destroy(red);
-                red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
+				red = percnn_destroy(red);
+				red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL,
+						&sem);
                 if (red) {
-                    if (conMomento);
-                    else rperc_set_alfaMomento(red, .0);
+					if (conMomento)
+						;
+					else
+						percnn_set_alphaMoment(red, .0);
                     for (k = 0; k < p; k++)
-                        pasarABitsYParidad(tamIn, inEnInt[k + resto], in[k], res[k]);
-                    rperc_set_rectaError(red, numDeIntentos, .45, .999, 0);
-                    if (rperc_aprender(red, p, in, res, batch)) {
+						pasarABitsYParidad(tamIn, inEnInt[k + resto], in[k],
+								res[k]);
+					percnn_set_lineError(red, numDeIntentos, .45, .999, 0);
+					if (percnn_learn(red, p, in, res, batch)) {
                         tot = tot + 1.0;
                         pasarABitsYParidad(tamIn, inEnInt[k], in[0], res[0]);
-                        test = rperc_eval(red, in[0]);
+						test = percnn_eval(red, in[0]);
                         /** /if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;/ **/
 						acum = acum + (dabs(res[0][0] - test[0]) / 2.0);
                         free(test);
                         if (j == 4999 && printRN) {
-                            char *str = rperc_to_str(red);
+							char *str = percnn_to_str(red);
                             printf("%s\n", str);
                             free(str);
                         }
-                        red = rperc_destroy(red);
-                    } else if (numDeIntentos < 5500) numDeIntentos += 2;
-                    else if (ok) ok--;
-                } else printf("OO OOO\n");
+						red = percnn_destroy(red);
+					} else if (numDeIntentos < 5500)
+						numDeIntentos += 2;
+					else if (ok)
+						ok--;
+				} else
+					printf("OO OOO\n");
             }
             if (ok) {
                 acum = acum / tot;
-                printf("%f\t%f\n", ((double) p) / ((double) totalCombinaciones), acum);
-            } else printf("FAIL!!!\n");
+				printf("%f\t%f\n", ((double) p) / ((double) totalCombinaciones),
+						acum);
+			} else
+				printf("FAIL!!!\n");
         }
         for (i = 0; i < 260; i++) {
             free(res[i]);
@@ -122,18 +140,18 @@ int ejer2(int hypORln, int printRN) {
     res = (double**) calloc(p, sizeof (double*));
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
-        rperc_t red = NULL;
+        percnn_t red = NULL;
         int numNeuronas[3];
-        neuralType tipoNuronas[3];
+		neuralType tipoNeuronas[3];
         for (i = 0; i < p; i++) {
             res[i] = (double*) calloc(1, sizeof (double));
             in[i] = (double*) calloc(1, sizeof (double));
         }
         numNeuronas[0] = 1;
         numNeuronas[2] = 1;
-        tipoNuronas[0] = tanhyp;
-        tipoNuronas[1] = tanhyp;
-        tipoNuronas[2] = lineal;
+		tipoNeuronas[0] = tanhyp;
+		tipoNeuronas[1] = tanhyp;
+		tipoNeuronas[2] = lineal;
         for (p = 5; p < 24; p *= 2) {
             if (hypORln) {
                 numNeuronas[1] = 4;
@@ -148,43 +166,50 @@ int ejer2(int hypORln, int printRN) {
                     res[i][0] = log(in[i][0]);
                 }
             }
-            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, NULL, &sem);
+			red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
             if (red) {
                 double err = ((double) (numNeuronas[1] - 2)) / 200.0;
                 int numIntentos = 0;
-                if (!conMomento) rperc_set_alfaMomento(red, .0);
-                rperc_set_rectaError(red, 100000, err, err, 0);
-                numIntentos = rperc_aprender(red, p, in, res, online);
+				if (!conMomento)
+					percnn_set_alphaMoment(red, .0);
+				percnn_set_lineError(red, 100000, err, err, 0);
+				numIntentos = percnn_learn(red, p, in, res, online);
                 if (numIntentos) {
                     if (p < 10) {
                         printf("f(x):\n\n");
                         for (i = 0; i < 100; i++) {
                             double x = 1.0 + ((double) i)*.04;
-                            if (hypORln) printf("%f\t%f\n", x, 1.0 / x);
-                            else printf("%f\t%f\n", x, log(x));
+							if (hypORln)
+								printf("%f\t%f\n", x, 1.0 / x);
+							else
+								printf("%f\t%f\n", x, log(x));
                         }
                     }
-                    printf("\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", numIntentos, p);
+					printf(
+							"\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n",
+							numIntentos, p);
                     for (i = 0; i < p; i++) {
-                        test = rperc_eval(red, in[i]);
+						test = percnn_eval(red, in[i]);
                         printf("%f\t%f\n", in[i][0], test[0]);
                         free(test);
                     }
                     printf("\nred(x): x in [1,5]:\n\n");
                     for (i = 0; i < 100; i++) {
                         double x = 1.0 + ((double) i)*.04;
-                        test = rperc_eval(red, &x);
+						test = percnn_eval(red, &x);
                         printf("%f\t%f\n", x, test[0]);
                         free(test);
                     }
                     if (printRN) {
-                        char *str = rperc_to_str(red);
+						char *str = percnn_to_str(red);
                         printf("%s\n\n\n", str);
                         free(str);
                     }
-                } else printf("No aprendí :-S :'(  TT__TT\n");
-                red = rperc_destroy(red);
-            } else printf("OO OOO\n");
+				} else
+					printf("No aprendí :-S :'(  TT__TT\n");
+				red = percnn_destroy(red);
+			} else
+				printf("OO OOO\n");
         }
         p = 20;
         for (i = 0; i < p; i++) {
@@ -197,6 +222,458 @@ int ejer2(int hypORln, int printRN) {
     return 0;
 }
 
+/**
+ * Prueba comparativa entre actF tanhyp, hyp2, log2 sobre hyp y log
+ */
+int ejer1F(int selecFun, int p, int printRN) {
+	int i = 0, conMomento = 1;
+	double **res = NULL, **in = NULL, *test = NULL;
+	long sem = -131;
+	res = (double**) calloc(p, sizeof(double*));
+	in = (double**) calloc(p, sizeof(double*));
+	if (res && in) {
+		percnn_t red = NULL;
+		int numNeuronas[3];
+		neuralType tipoNeuronas[3];
+		for (i = 0; i < p; i++) {
+			res[i] = (double*) calloc(1, sizeof(double));
+			in[i] = (double*) calloc(1, sizeof(double));
+		}
+		numNeuronas[0] = 1;
+		numNeuronas[2] = 1;
+		tipoNeuronas[0] = tanhyp;
+		tipoNeuronas[1] = tanhyp;
+		tipoNeuronas[2] = lineal;
+		switch (selecFun) {
+		case 1:
+			numNeuronas[1] = 4;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = 1.0 / in[i][0];
+			}
+			break;
+		case 2:
+			numNeuronas[1] = 6;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = log(in[i][0]);
+			}
+			break;
+		case 3:
+			numNeuronas[1] = 4;
+			tipoNeuronas[1] = hyp2;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = 1.0 / in[i][0];
+			}
+			break;
+		case 4:
+			numNeuronas[1] = 6;
+			tipoNeuronas[1] = hyp2;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = log(in[i][0]);
+			}
+			break;
+		case 5:
+			numNeuronas[1] = 4;
+			tipoNeuronas[1] = ln2p;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = 1.0 / in[i][0];
+			}
+			break;
+		case 6:
+			numNeuronas[1] = 6;
+			tipoNeuronas[1] = ln2p;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = log(in[i][0]);
+			}
+			break;
+		default:
+			if (p < 5) {
+				printf("f(x):\n\n");
+				for (i = 0; i < 200; i++) {
+					double x = .0001 + ((double) i) * .05;
+					if (p) {
+						/*x = x + .1;*/
+						printf("%f\t%f\n", x, 1.0 / x);
+					} else {
+						printf("%f\t%f\n", x, log(x));
+					}
+				}
+			}
+			break;
+		}
+		if (selecFun) {
+			red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
+			if (red) {
+				double err = ((double) (numNeuronas[1] - 2)) / 200.0;
+				int numIntentos = 0;
+				if (!conMomento)
+					percnn_set_alphaMoment(red, .0);
+				percnn_set_lineError(red, 100000, err, err, 0);
+				numIntentos = percnn_learn(red, p, in, res, online);
+				if (numIntentos) {
+					printf(
+							"\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n",
+							numIntentos, p);
+					for (i = 0; i < p; i++) {
+						test = percnn_eval(red, in[i]);
+						printf("%f\t%f\n", in[i][0], test[0]);
+						free(test);
+					}
+					printf("\nred(x): x in [0,10]:\n\n");
+					for (i = 0; i < 200; i++) {
+						double x = ((double) i) * .05;
+						test = percnn_eval(red, &x);
+						printf("%f\t%f\n", x, test[0]);
+						free(test);
+					}
+					if (printRN) {
+						char *str = percnn_to_str(red);
+						printf("%s\n\n\n", str);
+						free(str);
+					}
+				} else
+					printf("No aprendí :-S :'(  TT__TT\n");
+				red = percnn_destroy(red);
+			} else
+				printf("OO OOO\n");
+		}
+		for (i = 0; i < p; i++) {
+			free(res[i]);
+			free(in[i]);
+		}
+		free(res);
+		free(in);
+	}
+	return 0;
+}
+
+/**
+ * Entrenando X*Y comparacion con actF tanhyp y con pow2
+ */
+int ejer2F(int selecFun, int p, int printRN) {
+	int i = 0, conMomento = 1;
+	double **res = NULL, **in = NULL, *test = NULL;
+	long sem = -131;
+	res = (double**) calloc(p, sizeof(double*));
+	in = (double**) calloc(p, sizeof(double*));
+	if (res && in) {
+		percnn_t red = NULL;
+		int numNeuronas[3];
+		neuralType tipoNeuronas[3];
+		for (i = 0; i < p; i++) {
+			res[i] = (double*) calloc(1, sizeof(double));
+			in[i] = (double*) calloc(2, sizeof(double));
+			in[i][0] = ran2(&sem) * 20.0 - 10.0;
+			in[i][1] = ran2(&sem) * 20.0 - 10.0;
+			res[i][0] = in[i][0] * in[i][1];
+		}
+		numNeuronas[0] = 2;
+		numNeuronas[2] = 1;
+		tipoNeuronas[0] = tanhyp;
+		tipoNeuronas[1] = tanhyp;
+		tipoNeuronas[2] = lineal;
+		switch (selecFun) {
+		case 1:
+			numNeuronas[1] = 6;
+			break;
+		case 2:
+			numNeuronas[1] = 2;
+			tipoNeuronas[1] = pow2;
+			break;
+		default:
+			if (p < 5) {
+				printf("f(x):\n\n");
+				for (i = 0; i < 200; i++) {
+					double x = ((double) i) - 100.0;
+					int j = 0;
+					for (j = 0; j < 200; j++) {
+						double y = ((double) j) - 100.0;
+						printf("%f\t%f\t%f\n", x, y, x * y);
+					}
+				}
+			}
+			break;
+		}
+		if (selecFun) {
+			red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
+			if (red) {
+				double err = .02;
+				int numIntentos = 0;
+				if (!conMomento)
+					percnn_set_alphaMoment(red, .0);
+				percnn_set_lineError(red, 100000, err, err, 0);
+				numIntentos = percnn_learn(red, p, in, res, online);
+				if (numIntentos) {
+					printf(
+							"\nIntentos: %i\nred(x): x in [-10,10][-10,10]: (solo %i puntos aleatorios)\n\n",
+							numIntentos, p);
+					for (i = 0; i < p; i++) {
+						test = percnn_eval(red, in[i]);
+						printf("%f\t%f\t%f\n", in[i][0], in[i][1], /*res[i][0],*/
+						test[0]);
+						free(test);
+					}
+					printf("\nred(x): x in [-100,100][-100,100]:\n\n");
+					for (i = 0; i < 200; i++) {
+						double x[2];
+						int j = 0;
+						x[0] = ((double) i) - 100.0;
+						for (j = 0; j < 200; j++) {
+							x[1] = ((double) j) - 100.0;
+							test = percnn_eval(red, x);
+							printf("%f\t%f\t%f\n", x[0], x[1], test[0]);
+							free(test);
+						}
+					}
+					if (printRN) {
+						char *str = percnn_to_str(red);
+						printf("%s\n\n\n", str);
+						free(str);
+					}
+				} else
+					printf("No aprendí :-S :'(  TT__TT\n");
+				red = percnn_destroy(red);
+			} else
+				printf("OO OOO\n");
+		}
+		for (i = 0; i < p; i++) {
+			free(res[i]);
+			free(in[i]);
+		}
+		free(res);
+		free(in);
+	}
+	return 0;
+}
+
+/**
+ * Otra pruebita Entrenando X^2 comparacion con actF tanhyp y con pow2
+ * Notar que esta en otro rango los datos de prueba
+ */
+int ejer2Fpruebita(int selecFun, int p, int printRN) {
+	int i = 0;
+	double **res = NULL, **in = NULL, *test = NULL;
+	long sem = -131;
+	res = (double**) calloc(p, sizeof(double*));
+	in = (double**) calloc(p, sizeof(double*));
+	if (res && in) {
+		percnn_t red = NULL;
+		int numNeuronas[2];
+		neuralType tipoNeuronas[2];
+		for (i = 0; i < p; i++) {
+			res[i] = (double*) calloc(1, sizeof(double));
+			in[i] = (double*) calloc(2, sizeof(double));
+			in[i][0] = ran2(&sem) * 2.0 - 1.0;
+			in[i][1] = ran2(&sem) * 2.0 - 1.0;
+			res[i][0] = in[i][0] * in[i][0];
+		}
+		numNeuronas[0] = 1;
+		numNeuronas[1] = 1;
+		tipoNeuronas[0] = tanhyp;
+		tipoNeuronas[1] = pow2;
+		switch (selecFun) {
+		case 1:
+			numNeuronas[1] = 1;
+			tipoNeuronas[1] = pow2;
+			break;
+		case 2:
+			numNeuronas[1] = 1;
+			tipoNeuronas[1] = pow2;
+			break;
+		default:
+			numNeuronas[1] = 1;
+			tipoNeuronas[1] = pow2;
+			selecFun = 1;
+			break;
+		}
+		if (selecFun) {
+			red = percnn_create(1, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
+			if (red) {
+				double err = .1;
+				int numIntentos = 0;
+				percnn_set_lineError(red, 10000000, err, 2.0 * err, 0);
+				/*percnn_set_allNu(red, .0001, .002, .00001, .0001, .5);*/
+				numIntentos = percnn_learn(red, p, in, res, batch);
+				if (numIntentos) {
+					printf(
+							"\nIntentos: %i\nred(x): x in [-10,10][-10,10]: (solo %i puntos aleatorios)\n\n",
+							numIntentos, p);
+					for (i = 0; i < p; i++) {
+						test = percnn_eval(red, in[i]);
+						printf("%f\t%f\t%f\n", in[i][0], in[i][1], /*res[i][0],*/
+						test[0]);
+						free(test);
+					}
+					printf("\nred(x): x in [-10,10][-10,10]:\n\n");
+					for (i = 0; i < 20; i++) {
+						double x[2];
+						int j = 0;
+						x[0] = ((double) i) - 10.0;
+						for (j = 0; j < 20; j++) {
+							x[1] = ((double) j) - 10.0;
+							test = percnn_eval(red, x);
+							printf("%f\t%f\t%f\n", x[0], x[1], test[0]);
+							free(test);
+						}
+					}
+					if (printRN) {
+						char *str = percnn_to_str(red);
+						printf("%s\n\n\n", str);
+						free(str);
+					}
+				} else
+					printf("No aprendí :-S :'(  TT__TT\n");
+				red = percnn_destroy(red);
+			} else
+				printf("OO OOO\n");
+		}
+		for (i = 0; i < p; i++) {
+			free(res[i]);
+			free(in[i]);
+		}
+		free(res);
+		free(in);
+	}
+	return 0;
+}
+
+/**
+ * Entrenando (sin(X)*sin(Y))/(X*Y)
+ * comparacion con actF tanhyp y capa oculta mixta con sin
+ */
+int ejer3F(int selecFun, int p, int printRN) {
+	int i = 0, conMomento = 1;
+	double **res = NULL, **in = NULL, *test = NULL;
+	long sem = -131;
+	res = (double**) calloc(p, sizeof(double*));
+	in = (double**) calloc(p, sizeof(double*));
+	if (res && in) {
+		percnn_t red = NULL;
+		int numNeuronas[4], nTypesByLayers[] = { 1, 2, 1, 1 }, **nnTypes = NULL;
+		neuralType **tipos = NULL;
+		for (i = 0; i < p; i++) {
+			res[i] = (double*) calloc(1, sizeof(double));
+			in[i] = (double*) calloc(2, sizeof(double));
+			in[i][0] = ran2(&sem) * 20.0 - 10.0;
+			in[i][1] = ran2(&sem) * 20.0 - 10.0;
+			res[i][0] = sin(in[i][0]) * sin(in[i][1]) / (in[i][0] * in[i][1]);
+		}
+		printf("\nComenzando prueba ejer3F\n");
+		numNeuronas[0] = 2;
+		numNeuronas[1] = 6;
+		numNeuronas[2] = 4;
+		numNeuronas[3] = 1;
+		nnTypes = calloc(4, sizeof(int*));
+		for (i = 0; i < 4; i++) {
+			nnTypes[i] = calloc(2, sizeof(int));
+			nnTypes[i][1] = 0;
+		}
+		tipos = calloc(4, sizeof(neuralType*));
+		for (i = 0; i < 4; i++) {
+			tipos[i] = calloc(2, sizeof(neuralType));
+			tipos[i][0] = tanhyp;
+			tipos[i][1] = tanhyp;
+		}
+		nnTypes[0][0] = 2;
+		nnTypes[1][0] = 6;
+		nnTypes[2][0] = 4;
+		nnTypes[3][0] = 1;
+		/**/tipos[3][0] = lineal;/**/
+		tipos[1][1] = seno;
+		/**/tipos[3][1] = lineal;/**/
+		switch (selecFun) {
+		case 1:
+			break;
+		case 2:
+			nnTypes[1][0] = 4;
+			nnTypes[1][1] = 2;
+			break;
+		default:
+			if (p < 5) {
+				printf("f(x):\n\n");
+				for (i = 0; i < 200; i++) {
+					double x = ((double) i) - 100.0;
+					int j = 0;
+					for (j = 0; j < 200; j++) {
+						double y = ((double) j) - 100.0;
+						printf("%f\t%f\t%f\n", x, y, x * y);
+					}
+				}
+			}
+			break;
+		}
+		if (selecFun) {
+			red = percnn_create_with_neuronLayerMultiTypes(3, numNeuronas,
+					nTypesByLayers, nnTypes, tipos, NULL, NULL, &sem);
+			if (red) {
+				double err = .02;
+				int numIntentos = 0;
+				/**
+				 res->nu = .0476;
+				 res->alphaMoment = .5;
+				 res->maxNu = .057;
+				 res->minNu = .027;
+				 res->upNu = .0001;
+				 res->downNu = .985;
+				 */
+				percnn_set_allNu(red, .0476, .05, .046, .0001, .985);/**/
+				if (!conMomento)
+					percnn_set_alphaMoment(red, .0);
+				percnn_set_lineError(red, 10000000, err, err, 0);
+				numIntentos = percnn_learn(red, p, in, res, online);
+				if (numIntentos) {
+					printf(
+							"\nIntentos: %i\nred(x): x in [-10,10][-10,10]: (solo %i puntos aleatorios)\n\n",
+							numIntentos, p);
+					for (i = 0; i < p; i++) {
+						test = percnn_eval(red, in[i]);
+						printf("%f\t%f\t%f\n", in[i][0], in[i][1], /*res[i][0],*/
+						test[0]);
+						free(test);
+					}
+					printf("\nred(x): x in [-100,100][-100,100]:\n\n");
+					for (i = 0; i < 200; i++) {
+						double x[2];
+						int j = 0;
+						x[0] = ((double) i) - 100.0;
+						for (j = 0; j < 200; j++) {
+							x[1] = ((double) j) - 100.0;
+							test = percnn_eval(red, x);
+							printf("%f\t%f\t%f\n", x[0], x[1], test[0]);
+							free(test);
+						}
+					}
+					if (printRN) {
+						char *str = percnn_to_str(red);
+						printf("%s\n\n\n", str);
+						free(str);
+					}
+				} else
+					printf("No aprendí :-S :'(  TT__TT\n");
+				red = percnn_destroy(red);
+			} else
+				printf("OO OOO\n");
+		}
+		for (i = 0; i < p; i++) {
+			free(res[i]);
+			free(in[i]);
+		}
+		free(res);
+		free(in);
+		free(nnTypes);
+		free(tipos);
+	}
+	return 0;
+}
+
+/**
+ * Ejer de red codificadora 8:3:8 y 8:5:8
+ */
 int ejer3(void) {
     int i = 0, j = 0, p = 8, conMomento = 1;
     double **res = NULL, **in = NULL;
@@ -204,10 +681,11 @@ int ejer3(void) {
     res = (double**) calloc(p, sizeof (double*));
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
-        rperc_t red = NULL;
-        char strFiles[2][60] = {"../dat/redCodificadoraPract3Ejer3-8a3a8.rnp", "../dat/redCodificadoraPract3Ejer3-8a5a8.rnp"};
+        percnn_t red = NULL;
+		char strFiles[2][60] = { "../dat/redCodificadoraPract3Ejer3-8a3a8.rnp",
+				"../dat/redCodificadoraPract3Ejer3-8a5a8.rnp" };
         int numNeuronas[3];
-        neuralType tipoNuronas[3];
+		neuralType tipoNeuronas[3];
         for (i = 0; i < p; i++) {
             res[i] = (double*) calloc(p, sizeof (double));
             in[i] = (double*) calloc(p, sizeof (double));
@@ -224,26 +702,30 @@ int ejer3(void) {
             }
         numNeuronas[0] = 8;
         numNeuronas[2] = 8;
-        tipoNuronas[0] = tanhyp;
-        tipoNuronas[1] = tanhyp;
-        tipoNuronas[2] = tanhyp;
+		tipoNeuronas[0] = tanhyp;
+		tipoNeuronas[1] = tanhyp;
+		tipoNeuronas[2] = tanhyp;
         for (p = 0; p < 2; p++) {
             numNeuronas[1] = 3 + p * 2;
-            red = rperc_create(2, numNeuronas, tipoNuronas, NULL, strFiles[p], &sem);
+			red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, strFiles[p],
+					&sem);
             if (red) {
                 int numIntentos = 0;
-                if (!conMomento) rperc_set_alfaMomento(red, .0);
-                rperc_set_rectaError(red, 100000, .015, .0199, 0);
-                numIntentos = rperc_aprender(red, 8, in, res, online);
+				if (!conMomento)
+					percnn_set_alphaMoment(red, .0);
+				percnn_set_lineError(red, 100000, .015, .0199, 0);
+				numIntentos = percnn_learn(red, 8, in, res, online);
                 if (numIntentos) {
                     char *str = NULL;
-                    str = rperc_to_str(red);
-                    rperc_save_plaintext(red, NULL);
+					str = percnn_to_str(red);
+					percnn_save_plaintext(red, NULL );
                     printf("Num de Intentos: %i\n%s\n\n", numIntentos, str);
                     free(str);
-                } else printf("No aprendí :-S :'(  TT__TT\n");
-                red = rperc_destroy(red);
-            } else printf("OO OOO\n");
+				} else
+					printf("No aprendí :-S :'(  TT__TT\n");
+				red = percnn_destroy(red);
+			} else
+				printf("OO OOO\n");
         }
         p = 8;
         for (i = 0; i < p; i++) {
@@ -256,9 +738,19 @@ int ejer3(void) {
     return 0;
 }
 
+void printHelp(char* invalidOption) {
+	if (invalidOption != NULL )
+		printf("No me gusto el \"%s\"\n", invalidOption);
+	printf("Debe ingresar:\n\t-E[e] <num_de_ejer>\n\t-N[n] <num_de_Neuronas>\n\t-M[m] <momentum>\n\t-V[v] <Verbose>\n\t-P[p] <practico>\n\n");
+}
+
 int main(int argc, char** argv) {
-    int i = 1, ejer = 0, todo_bien = 1, momento = 0, tam = 1, printRN = 0;
-    while (todo_bien && i + 1 < argc) {
+	int i = 1, ejer = 0, momento = 0, tam = 0, printRN = 0, practicSelected = 0;
+	if (argc < 2) {
+		printHelp(NULL );
+		return EXIT_FAILURE;
+	}
+	while (i + 1 < argc) {
         if (!strcmp(argv[i], "-E") || !strcmp(argv[i], "-e")) {
             i++;
             ejer = atoi(argv[i]);
@@ -268,17 +760,19 @@ int main(int argc, char** argv) {
         } else if (!strcmp(argv[i], "-M") || !strcmp(argv[i], "-m")) {
             i++;
             momento = atoi(argv[i]);
-        } else if (!strcmp(argv[i], "-P") || !strcmp(argv[i], "-p") ||
-                !strcmp(argv[i], "-V") || !strcmp(argv[i], "-v")) {
+		} else if (!strcmp(argv[i], "-V") || !strcmp(argv[i], "-v")) {
             i++;
             printRN = 1;
+		} else if (!strcmp(argv[i], "-P") || !strcmp(argv[i], "-p")) {
+			i++;
+			practicSelected = 3;
         } else {
-            printf("No me gusto el \"%s\"\nDebe ingresar:\n\t-E[n] <num_de_ejer>\n\n", argv[i]);
-            todo_bien = 0;
+			printHelp(argv[i]);
+			return EXIT_FAILURE;
         }
         i++;
     }
-    if (todo_bien) {
+	if (practicSelected)
         switch (ejer) {
             case 2:
                 ejer2(tam, printRN);
@@ -287,9 +781,24 @@ int main(int argc, char** argv) {
                 ejer3();
                 break;
             default:
-                if (tam < 4) tam = 4;
+			if (tam < 4)
+				tam = 4;
                 ejer1(tam, momento, printRN);
                 break;
+		}
+	else {
+		switch (ejer) {
+		case 1:
+			ejer1F(tam, momento, printRN);
+			break;
+		case 2:
+			ejer2F(tam, momento, printRN);
+			break;
+		case 3:
+			ejer2Fpruebita(tam, momento, 0);
+			break;
+		default:
+			ejer3F(tam, momento, 0);
         }
     }
     return EXIT_SUCCESS;

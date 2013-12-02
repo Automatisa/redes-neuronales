@@ -5,9 +5,9 @@
  *
  */
 
-#include "lib/generadores.h"
-#include "lib/otraLibMas.h"
-#include "perceptron/redPerceptron.h"
+#include "neural-networks/lib/generadores.h"
+#include "neural-networks/lib/otraLibMas.h"
+#include "neural-networks/perceptron/perceptronNeuralNet.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -52,7 +52,7 @@ int ejer1(int tamIn, int conMomento, int printRN) {
     res = (double**) calloc(260, sizeof (double*));
     in = (double**) calloc(260, sizeof (double*));
     if (res && in) {
-        rperc_t red = NULL;
+    	percnn_t red = NULL;
         int numNeuronas[3], paso = pow(2, tamIn - 3)
                 , totalCombinaciones = pow(2, tamIn);
         neuralType tipoNeuronas[3];
@@ -75,27 +75,27 @@ int ejer1(int tamIn, int conMomento, int printRN) {
                 int resto = ((j * p) % totalCombinaciones);
                 if (totalCombinaciones <= resto + p)
                     mezclameLasCartas(inEnInt, totalCombinaciones, &sem);
-                red = rperc_destroy(red);
-                red = rperc_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
+                red = percnn_destroy(red);
+                red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
                 if (red) {
                     if (conMomento);
-                    else rperc_set_alfaMomento(red, .0);
+                    else percnn_set_alphaMoment(red, .0);
                     for (k = 0; k < p; k++)
                         pasarABitsYParidad(tamIn, inEnInt[k + resto], in[k], res[k]);
-                    rperc_set_rectaError(red, numDeIntentos, .45, .999, 0);
-                    if (rperc_aprender(red, p, in, res, batch)) {
+                    percnn_set_lineError(red, numDeIntentos, .45, .999, 0);
+                    if (percnn_learn(red, p, in, res, batch)) {
                         tot = tot + 1.0;
                         pasarABitsYParidad(tamIn, inEnInt[k], in[0], res[0]);
-                        test = rperc_eval(red, in[0]);
+                        test = percnn_eval(red, in[0]);
                         /** /if (dabs(res[0][0] - test[0]) < 1.0) acum = acum + 1.0;/ **/
 						acum = acum + (dabs(res[0][0] - test[0]) / 2.0);
                         free(test);
                         if (j == 4999 && printRN) {
-                            char *str = rperc_to_str(red);
+                            char *str = percnn_to_str(red);
                             printf("%s\n", str);
                             free(str);
                         }
-                        red = rperc_destroy(red);
+                        red = percnn_destroy(red);
                     } else if (numDeIntentos < 5500) numDeIntentos += 2;
                     else if (ok) ok--;
                 } else printf("OO OOO\n");
@@ -122,7 +122,7 @@ int ejer2(int hypORln, int printRN) {
     res = (double**) calloc(p, sizeof (double*));
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
-        rperc_t red = NULL;
+    	percnn_t red = NULL;
         int numNeuronas[3];
         neuralType tipoNeuronas[3];
         for (i = 0; i < p; i++) {
@@ -148,13 +148,13 @@ int ejer2(int hypORln, int printRN) {
                     res[i][0] = log(in[i][0]);
                 }
             }
-            red = rperc_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
+            red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
             if (red) {
                 double err = ((double) (numNeuronas[1] - 2)) / 200.0;
                 int numIntentos = 0;
-                if (!conMomento) rperc_set_alfaMomento(red, .0);
-                rperc_set_rectaError(red, 100000, err, err, 0);
-                numIntentos = rperc_aprender(red, p, in, res, online);
+                if (!conMomento) percnn_set_alphaMoment(red, .0);
+                percnn_set_lineError(red, 100000, err, err, 0);
+                numIntentos = percnn_learn(red, p, in, res, online);
                 if (numIntentos) {
                     if (p < 10) {
                         printf("f(x):\n\n");
@@ -166,24 +166,24 @@ int ejer2(int hypORln, int printRN) {
                     }
                     printf("\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n", numIntentos, p);
                     for (i = 0; i < p; i++) {
-                        test = rperc_eval(red, in[i]);
+                        test = percnn_eval(red, in[i]);
                         printf("%f\t%f\n", in[i][0], test[0]);
                         free(test);
                     }
                     printf("\nred(x): x in [1,5]:\n\n");
                     for (i = 0; i < 100; i++) {
                         double x = 1.0 + ((double) i)*.04;
-                        test = rperc_eval(red, &x);
+                        test = percnn_eval(red, &x);
                         printf("%f\t%f\n", x, test[0]);
                         free(test);
                     }
                     if (printRN) {
-                        char *str = rperc_to_str(red);
+                        char *str = percnn_to_str(red);
                         printf("%s\n\n\n", str);
                         free(str);
                     }
                 } else printf("No aprendí :-S :'(  TT__TT\n");
-                red = rperc_destroy(red);
+                red = percnn_destroy(red);
             } else printf("OO OOO\n");
         }
         p = 20;
@@ -204,7 +204,7 @@ int ejer3(void) {
     res = (double**) calloc(p, sizeof (double*));
     in = (double**) calloc(p, sizeof (double*));
     if (res && in) {
-        rperc_t red = NULL;
+    	percnn_t red = NULL;
         char strFiles[2][60] = {"../dat/redCodificadoraPract3Ejer3-8a3a8.rnp", "../dat/redCodificadoraPract3Ejer3-8a5a8.rnp"};
         int numNeuronas[3];
         neuralType tipoNeuronas[3];
@@ -229,20 +229,20 @@ int ejer3(void) {
         tipoNeuronas[2] = tanhyp;
         for (p = 0; p < 2; p++) {
             numNeuronas[1] = 3 + p * 2;
-            red = rperc_create(2, numNeuronas, tipoNeuronas, NULL, strFiles[p], &sem);
+            red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, strFiles[p], &sem);
             if (red) {
                 int numIntentos = 0;
-                if (!conMomento) rperc_set_alfaMomento(red, .0);
-                rperc_set_rectaError(red, 100000, .015, .0199, 0);
-                numIntentos = rperc_aprender(red, 8, in, res, online);
+                if (!conMomento) percnn_set_alphaMoment(red, .0);
+                percnn_set_lineError(red, 100000, .015, .0199, 0);
+                numIntentos = percnn_learn(red, 8, in, res, online);
                 if (numIntentos) {
                     char *str = NULL;
-                    str = rperc_to_str(red);
-                    rperc_save_plaintext(red, NULL);
+                    str = percnn_to_str(red);
+                    percnn_save_plaintext(red, NULL);
                     printf("Num de Intentos: %i\n%s\n\n", numIntentos, str);
                     free(str);
                 } else printf("No aprendí :-S :'(  TT__TT\n");
-                red = rperc_destroy(red);
+                red = percnn_destroy(red);
             } else printf("OO OOO\n");
         }
         p = 8;
