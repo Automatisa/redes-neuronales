@@ -66,14 +66,14 @@ void mzran_set(unlong x, unlong y, unlong z, unlong m) {
     M = m;
 }
 
-/*Para devolver numeros aleatorios en (0,1)*/
+/*Para devolver numeros aleatorios en (0,1)* /
 float mzran_uni(void) {
     unsigned long int p = 4294967295;
     float div = (1.0 / p);
 
     return mzran() * div;
     ;
-}
+}/ * This code is bothering here.  */
 
 /*GENERADOR 2: MZRAN13*/
 
@@ -104,13 +104,13 @@ void mzran13_set(unlong x, unlong y, unlong z, unlong n) {
     N = N;
 }
 
-/*Para devolver numeros aleatorios en (0,1)*/
+/*Para devolver numeros aleatorios en (0,1)* /
 float mzran13_uni(void) {
     unsigned long int p = 4294967295;
     float div = (1.0 / p);
 
     return mzran13() * div;
-}
+}/ * This code is bothering here.  */
 
 
 /*GENERADOR 3: RAN0*/
