@@ -37,3 +37,8 @@ ehthumbs.db
 Thumbs.db
 .svn
 .dropbox
+.cproject
+.depend
+.project
+.settings
+*.sublime-*
