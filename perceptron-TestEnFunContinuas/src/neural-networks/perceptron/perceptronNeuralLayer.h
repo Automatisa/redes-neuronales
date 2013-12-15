@@ -3,6 +3,7 @@
  *
  *  Created on: 28/12/2012
  *      Author: nahuel
+ * $ License: GPL v3 $
  */
 
 #ifndef PERCEPTRONNEURALLAYER_H

@@ -3,6 +3,7 @@
  *
  *  Created on: 28/12/2012
  *      Author: nahuel
+ * $ License: GPL v3 $
  */
 
 #include "perceptronNeuralLayer.h"
@@ -309,13 +310,16 @@ double *percl_eval(percl_t layer, int derived) {
 	if (layer) {
 		if (layer->prevLayer) {
 			int i = 0, j = 0;
-			for (i = 0; i < layer->neuralOut; i++) {
+			for (i = 0; i < layer->neuralOut; i++) {/*
+				printf("Val Neurona AUX W[%i][%i]=%g y PrevLayerOut[%i]=%g",i,layer->neuralIn,layer->W[i][layer->neuralIn],layer->neuralIn,-1.0);*/
 				layer->out[i] = -layer->W[i][layer->neuralIn];
-				for (j = 0; j < layer->neuralIn; j++)
+				for (j = 0; j < layer->neuralIn; j++) {/*
+					printf("Val W[%i][%i]=%g y PrevLayerOut[%i]=%g",i,j,layer->W[i][j],j,layer->prevLayer->out[j]);*/
 					layer->out[i] = layer->out[i]
 							+ (layer->W[i][j] * layer->prevLayer->out[j]);
+				}
 				if (derived)
-					layer->delta[i] = dg(/*2.0 **/layer->out[i],
+					layer->delta[i] = dg(/** /2.0 * / **/layer->out[i],
 							percl_get_typeOfNeuron(layer, i));
 				/* TODO: Evaluar posibilidad de si es type 0
 				 * y es la ultima capa, usar out=sig(g)
@@ -323,7 +327,7 @@ double *percl_eval(percl_t layer, int derived) {
 				 * en el aprendizage a nivel net y no a nivel capa
 				 * TODO: ver que aca el beta es fijo.
 				 */
-				layer->out[i] = g(/*2.0 **/layer->out[i],
+				layer->out[i] = g(/** /2.0 * / **/layer->out[i],
 						percl_get_typeOfNeuron(layer, i));
 			}
 		}

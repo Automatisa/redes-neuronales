@@ -7,6 +7,7 @@
 
 #include "neuronFunction.h"
 #include <math.h>
+/*#include <stdio.h>*/
 
 double sig(double x);
 
@@ -17,12 +18,15 @@ double sig(double x) {
 }
 
 double g(double h, neuralType tipo) {
+	/*int KK;*/
 	switch (tipo) {
 	case lineal:
 		return h;
 	case seno:
 		return sin(h);
-	case pow2:
+	case pow2:/*
+		printf("\nEsto esta dentro de Func: %g\t%g\n",h,pow(h, 2.0));
+		scanf(" %i ",&KK);*/
 		return pow(h, 2.0);
 	case hyp2:
 		return 1.0 / (pow(h, 2.0) + .005);
@@ -43,7 +47,8 @@ double dg(double h, neuralType tipo) {
 		return 1.0;
 	case seno:
 		return cos(h);
-	case pow2:
+	case pow2:/*
+		printf("\nDerivando dentro de Func: %g\t%g\n",h,2.0*h);*/
 		return 2.0 * h;
 	case hyp2:
 		return -(2.0 * h)

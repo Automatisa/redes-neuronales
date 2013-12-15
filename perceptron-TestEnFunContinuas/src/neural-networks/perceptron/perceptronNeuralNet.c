@@ -777,11 +777,11 @@ int percnn_learn(percnn_t net, int numData, double** in, double** desired,
 						restConcepts++;
 					}
 				}
-				/**/printf("IntenRest=%ld\tConcFalta=%i\tError=%f\tErrorFailer=%f\tNu=%g\n",
+				/** /printf("IntenRest=%ld\tConcFalta=%i\tError=%f\tErrorFailer=%f\tNu=%g\n",
 				 net->attempsRemaining, restConcepts,
 				 pActError / (double) numData,
 				 pActFailError / (double) restConcepts,
-				 net->nu);/**/
+				 net->nu);/ **/
 				percnn_adaptNu(net, (double) restConcepts);
 			}
 			free(selec);

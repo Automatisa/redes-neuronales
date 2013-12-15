@@ -270,7 +270,8 @@ int ejer2F(int selecFun, int p, int printRN) {
 			numNeuronas[1] = 6;
 			break;
 		case 2:
-			numNeuronas[1] = 2;
+			/* primero intentamos con 2 y no aprendio */
+			numNeuronas[1] = 3;
 			tipoNeuronas[1] = pow2;
 			break;
 		default:
@@ -294,6 +295,23 @@ int ejer2F(int selecFun, int p, int printRN) {
 				int numIntentos = 0;
 				if (!conMomento)
 					percnn_set_alphaMoment(red, .0);
+				/*
+				res->nu = .0476;
+				res->alphaMoment = .5;
+				res->maxNu = .057;
+				res->minNu = .027;
+				res->upNu = .0001;
+				res->downNu = .985;*/
+		                switch (selecFun) {
+                		case 1:
+                                        percnn_set_allNu(red, .9, .99, 1e-69, .005, .5);
+		                        break;
+		                case 2:
+				percnn_set_allNu(red, .00000008, .99, 1e-69, .00000000005, .1);
+                		        break;
+		                default:
+					break;
+				}
 				percnn_set_lineError(red, 100000, err, err, 0);
 				numIntentos = percnn_learn(red, p, in, res, online);
 				if (numIntentos) {
@@ -337,14 +355,13 @@ int ejer2F(int selecFun, int p, int printRN) {
 		free(in);
 	}
 	return 0;
-}
+}/**/
 
 /**
- * Otra pruebita Entrenando X^2 comparacion con actF tanhyp y con pow2
- * Notar que esta en otro rango los datos de prueba
- */
-int ejer2Fpruebita(int selecFun, int p, int printRN) {
-	int i = 0;
+ * It's only an other TC
+ * /
+int ejer2F(int selecFun, int p, int printRN) {
+	int i = 0, conMomento = 1;
 	double **res = NULL, **in = NULL, *test = NULL;
 	long sem = -131;
 	res = (double**) calloc(p, sizeof(double*));
@@ -355,57 +372,171 @@ int ejer2Fpruebita(int selecFun, int p, int printRN) {
 		neuralType tipoNeuronas[2];
 		for (i = 0; i < p; i++) {
 			res[i] = (double*) calloc(1, sizeof(double));
-			in[i] = (double*) calloc(2, sizeof(double));
-			in[i][0] = ran2(&sem) * 2.0 - 1.0;
-			in[i][1] = ran2(&sem) * 2.0 - 1.0;
+			in[i] = (double*) calloc(1, sizeof(double));
+			in[i][0] = ran2(&sem) * 20.0 - 10.0;
 			res[i][0] = in[i][0] * in[i][0];
 		}
 		numNeuronas[0] = 1;
 		numNeuronas[1] = 1;
 		tipoNeuronas[0] = tanhyp;
-		tipoNeuronas[1] = pow2;
+		tipoNeuronas[1] = lineal;
 		switch (selecFun) {
 		case 1:
 			numNeuronas[1] = 1;
-			tipoNeuronas[1] = pow2;
 			break;
 		case 2:
 			numNeuronas[1] = 1;
 			tipoNeuronas[1] = pow2;
 			break;
 		default:
-			numNeuronas[1] = 1;
-			tipoNeuronas[1] = pow2;
-			selecFun = 1;
+			if (p < 5) {
+				printf("f(x):\n\n");
+				for (i = 0; i < 200; i++) {
+					double x = ((double) i) - 100.0;
+					printf("%f\t%f\n", x, x * x);
+				}
+			}
 			break;
 		}
 		if (selecFun) {
 			red = percnn_create(1, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
 			if (red) {
-				double err = .1;
+				double err = .02;
 				int numIntentos = 0;
-				percnn_set_lineError(red, 10000000, err, 2.0 * err, 0);
-				/*percnn_set_allNu(red, .0001, .002, .00001, .0001, .5);*/
-				numIntentos = percnn_learn(red, p, in, res, batch);
+				if (!conMomento)
+					percnn_set_alphaMoment(red, .0);
+				/ *
+				res->nu = .0476;
+				res->alphaMoment = .5;
+				res->maxNu = .057;
+				res->minNu = .027;
+				res->upNu = .0001;
+				res->downNu = .985;* /
+				percnn_set_allNu(red, .00008, .99, 1e-69, .00000005, .01);
+				percnn_set_lineError(red, 10/ *0000* /, err, err, 0);
+				numIntentos = percnn_learn(red, p, in, res, online);
+				if (numIntentos) {
+					printf(
+							"\nIntentos: %i\nred(x): x in [-10,10]: (solo %i puntos aleatorios)\n\n",
+							numIntentos, p);
+					for (i = 0; i < p; i++) {
+						test = percnn_eval(red, in[i]);
+						printf("%f\t%f\n", in[i][0], / *res[i][0],* /
+						test[0]);
+						free(test);
+					}
+					printf("\nred(x): x in [-100,100]:\n\n");
+					for (i = 0; i < 200; i++) {
+						double x[1];
+						x[0] = ((double) i) - 100.0;
+						test = percnn_eval(red, x);
+						printf("%f\t%f\n", x[0], test[0]);
+						free(test);
+					}
+					if (printRN) {
+						char *str = percnn_to_str(red);
+						printf("%s\n\n\n", str);
+						free(str);
+					}
+				} else
+					printf("No aprendí :-S :'(  TT__TT\n");
+				red = percnn_destroy(red);
+			} else
+				printf("OO OOO\n");
+		}
+		for (i = 0; i < p; i++) {
+			free(res[i]);
+			free(in[i]);
+		}
+		free(res);
+		free(in);
+	}
+	return 0;
+}
+/ **/
+/**
+ * Otra pruebita Entrenando X^2 comparacion con actF tanhyp y con pow2
+ * Notar que esta en otro rango los datos de prueba
+ */
+int ejer2Fpruebita(int selecFun, int p, int printRN) {
+	int i = 0/*, conMomento = 1*/;
+	double **res = NULL, **in = NULL, *test = NULL;
+	long sem = -131;
+	res = (double**) calloc(p, sizeof(double*));
+	in = (double**) calloc(p, sizeof(double*));
+	if (res && in) {
+		percnn_t red = NULL;
+		int numNeuronas[3];
+		neuralType tipoNeuronas[3];
+		for (i = 0; i < p; i++) {
+			res[i] = (double*) calloc(1, sizeof(double));
+			in[i] = (double*) calloc(2, sizeof(double));
+			in[i][0] = ran2(&sem) * 2.0 - 1.0;
+			in[i][1] = ran2(&sem) * 2.0 - 1.0;
+			res[i][0] = in[i][0] * in[i][1];
+		}
+		numNeuronas[0] = 2;
+		numNeuronas[2] = 1;
+		tipoNeuronas[0] = tanhyp;
+		tipoNeuronas[1] = tanhyp;
+		tipoNeuronas[2] = lineal;
+		switch (selecFun) {
+		case 1:
+			numNeuronas[1] = 12;
+			break;
+		case 2:
+			numNeuronas[1] = 2;
+			tipoNeuronas[1] = pow2;
+			break;
+		default:
+			if (p < 5) {
+				printf("f(x):\n\n");
+				for (i = 0; i < 200; i++) {
+					double x = (((double) i)/10.0) - 10.0;
+					int j = 0;
+					for (j = 0; j < 200; j++) {
+						double y = (((double) j)/10.0) - 10.0;
+						printf("%f\t%f\t%f\n", x, y, x * y);
+					}
+				}
+			}
+			break;
+		}
+		if (selecFun) {
+			red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
+			if (red) {
+				double err = .002;
+				int numIntentos = 0;
+				percnn_set_lineError(red, 10000000, err, err, 0);
+				/*
+				res->nu = .0476;
+				res->alphaMoment = .5;
+				res->maxNu = .057;
+				res->minNu = .027;
+				res->upNu = .0001;
+				res->downNu = .985;*/
+				/*percnn_set_allNu(red, .00008, .99, 1e-69, .00000005, .01);
+				percnn_set_allNu(red, .0001, .002, .00001, .0001, .5);*/
+				numIntentos = percnn_learn(red, p, in, res, online/*batch*/);
 				if (numIntentos) {
 					printf(
 							"\nIntentos: %i\nred(x): x in [-10,10][-10,10]: (solo %i puntos aleatorios)\n\n",
 							numIntentos, p);
 					for (i = 0; i < p; i++) {
 						test = percnn_eval(red, in[i]);
-						printf("%f\t%f\t%f\n", in[i][0], in[i][1], /*res[i][0],*/
-						test[0]);
+						printf("%f\t%f\t%f\n", 10.0*in[i][0], 10.0*in[i][1], /*res[i][0],*/
+						100.0*test[0]);
 						free(test);
 					}
-					printf("\nred(x): x in [-10,10][-10,10]:\n\n");
-					for (i = 0; i < 20; i++) {
+					printf("\nred(x): x in [-100,100][-100,100]:\n\n");
+					for (i = 0; i < 200; i++) {
 						double x[2];
 						int j = 0;
-						x[0] = ((double) i) - 10.0;
-						for (j = 0; j < 20; j++) {
-							x[1] = ((double) j) - 10.0;
+						x[0] = (((double) i)/10.0) - 10.0;
+						for (j = 0; j < 200; j++) {
+							x[1] = (((double) j)/10.0) - 10.0;
 							test = percnn_eval(red, x);
-							printf("%f\t%f\t%f\n", x[0], x[1], test[0]);
+							printf("%f\t%f\t%f\n", 10.0*x[0], 10.0*x[1], 100.0*test[0]);
 							free(test);
 						}
 					}
@@ -685,6 +816,7 @@ int main(int argc, char** argv) {
 			break;
 		default:
 			ejer3F(tam, momento, 0);
+			break;
         }
     }
     return EXIT_SUCCESS;
