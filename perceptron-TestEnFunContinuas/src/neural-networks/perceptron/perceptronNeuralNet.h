@@ -103,6 +103,20 @@ int percnn_learn(percnn_t net, int numData, double** in, double** desired,
 int percnn_test(percnn_t net, int numData, double** in, double** desired,
 		tMode testBy);
 
+/**
+ * False by default
+ * If there not a hidden layer, then create one.
+ * Add neurons only on last hidden layer.
+ * New neurons are the same type of the output neurons or tanh if grow.
+ */
+int percnn_setAdaptativelyGrowMode(percnn_t net, int boolConfirm);
+
+/**
+ * False by default
+ * PruningMode is not implemented yet.
+ */
+int percnn_setPruningMode(percnn_t net, int boolConfirm);
+
 #ifdef  __cplusplus
 }
 #endif

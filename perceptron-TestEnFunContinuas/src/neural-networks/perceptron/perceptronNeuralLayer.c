@@ -17,6 +17,7 @@
 
 struct sLayerPerc {
 	int neuralIn, neuralOut, numTypes, *neuronOfTypes;
+	int pruningMode;
 	neuralType* types;
 	percl_t nextLayer, prevLayer;
 	double *out, *delta, **W, **dWmoment;
@@ -50,6 +51,7 @@ percl_t percl_create(int neuralIn, int neuralOut, neuralType type,
 		res->neuralIn = neuralIn;
 		res->neuralOut = neuralOut;
 		res->numTypes = 1;
+		res->pruningMode = 0;
 		res->neuronOfTypes = calloc(res->numTypes, sizeof(int));
 		res->neuronOfTypes[0] = neuralOut;
 		res->types = calloc(res->numTypes, sizeof(neuralType));
@@ -298,6 +300,23 @@ int percl_set_In(percl_t layer, int numIn, double* in) {
 			for (i = 0; i < numIn; i++)
 				layer->out[i] = in[i];
 			res = 0;
+		}
+	}
+	return res;
+}
+
+/**
+ * False by default
+ * PruningMode is not implemented yet.
+ */
+int percl_setPruningMode(percl_t layer, int boolConfirm) {
+	int res = 0;
+	if(layer) {
+		layer->pruningMode = boolConfirm;
+		if(layer->nextLayer) {
+			res = percl_setPruningMode(layer->nextLayer, boolConfirm);
+		} else {
+			res = 1;
 		}
 	}
 	return res;

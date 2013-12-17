@@ -30,6 +30,7 @@ void percnn_learn_batch(percnn_t net, int numData, double **in,
 
 struct sPercNeuralNet {
 	int numLayers, numRealIn, typeErr, numVIContext;
+	int adapGrowMode, pruningMode;
 	long *sem, totalAttemps, attempsRemaining;
 	double nu, alphaMoment, oldError, maxNu, minNu, upNu, downNu, /** / *lastErr,/ **/
 	*muRetenContex, maxErr, minErr;
@@ -83,6 +84,8 @@ percnn_t percnn_create_base(int numLayers, int* neuronsByLayer,
 			res->attempsRemaining = res->totalAttemps;
 			res->maxErr = .999;
 			res->minErr = .1;
+			res->adapGrowMode = 0;
+			res->pruningMode = 0;
 			res->sem = sem;
 		}
 	}
@@ -788,6 +791,34 @@ int percnn_learn(percnn_t net, int numData, double** in, double** desired,
 		}
 	}
 	return net->attempsRemaining;
+}
+
+/**
+ * False by default
+ * If there not a hidden layer, then create one.
+ * Add neurons only on last hidden layer.
+ * New neurons are the same type of the output neurons or tanh if grow.
+ */
+int percnn_setAdaptativelyGrowMode(percnn_t net, int boolConfirm) {
+	int res = 0;
+	if(net) {
+		res = 1;
+		net->adapGrowMode = boolConfirm;
+	}
+	return res;
+}
+
+/**
+ * False by default
+ * PruningMode is not implemented yet.
+ */
+int percnn_setPruningMode(percnn_t net, int boolConfirm) {
+	int res = 0;
+	if(net) {
+		res = percl_setPruningMode(net->first, boolConfirm);
+		net->pruningMode = boolConfirm;
+	}
+	return res;
 }
 
 int percnn_test(percnn_t net, int numData, double** in, double** desired,

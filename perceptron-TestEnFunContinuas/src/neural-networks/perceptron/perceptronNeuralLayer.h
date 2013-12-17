@@ -31,6 +31,12 @@ percl_t percl_get_nextLayer(percl_t layer);
 int percl_set_nextLayer(percl_t layer, percl_t nextL);
 int percl_set_In(percl_t layer, int numIn, double* in);
 
+/**
+ * False by default
+ * PruningMode is not implemented yet.
+ */
+int percl_setPruningMode(percl_t layer, int boolConfirm);
+
 double *percl_eval(percl_t layer, int derived);
 void percl_learn(percl_t layer, double *desired, double alphaMoment, double nu);
 
