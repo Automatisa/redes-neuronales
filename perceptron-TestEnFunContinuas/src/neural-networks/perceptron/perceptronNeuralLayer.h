@@ -27,6 +27,7 @@ char *percl_to_str(percl_t layer);
 
 int percl_get_num_Out(percl_t layer);
 percl_t percl_get_nextLayer(percl_t layer);
+percl_t percl_get_prevLayer(percl_t layer);
 
 int percl_set_nextLayer(percl_t layer, percl_t nextL);
 int percl_set_In(percl_t layer, int numIn, double* in);
@@ -36,6 +37,9 @@ int percl_set_In(percl_t layer, int numIn, double* in);
  * PruningMode is not implemented yet.
  */
 int percl_setPruningMode(percl_t layer, int boolConfirm);
+
+percl_t percl_add_extension_layer(percl_t layer, double copyPercent);
+percl_t percl_add_neuron(percl_t layer);
 
 double *percl_eval(percl_t layer, int derived);
 void percl_learn(percl_t layer, double *desired, double alphaMoment, double nu);

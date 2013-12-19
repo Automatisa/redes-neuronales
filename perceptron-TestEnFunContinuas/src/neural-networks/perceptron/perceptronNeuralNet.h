@@ -110,6 +110,10 @@ int percnn_test(percnn_t net, int numData, double** in, double** desired,
  * New neurons are the same type of the output neurons or tanh if grow.
  */
 int percnn_setAdaptativelyGrowMode(percnn_t net, int boolConfirm);
+int percnn_getAdaptativelyGrowMode(percnn_t net);
+
+int percnn_setAdaptativelyGrowParameters(percnn_t net, double fvuTol,
+		double stopRatioNeurons, double stopRatioLayer, double copyRatio);
 
 /**
  * False by default

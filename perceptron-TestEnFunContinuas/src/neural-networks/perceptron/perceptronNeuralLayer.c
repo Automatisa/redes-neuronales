@@ -281,6 +281,13 @@ percl_t percl_get_nextLayer(percl_t layer) {
 	return res;
 }
 
+percl_t percl_get_prevLayer(percl_t layer) {
+	percl_t res = NULL;
+	if (layer)
+		res = layer->prevLayer;
+	return res;
+}
+
 int percl_set_nextLayer(percl_t layer, percl_t nextL) {
 	int res = 1;
 	if (layer && nextL) {
@@ -320,6 +327,127 @@ int percl_setPruningMode(percl_t layer, int boolConfirm) {
 		}
 	}
 	return res;
+}
+
+percl_t percl_add_extension_layer(percl_t layer, double copyPercent) {
+	percl_t res = NULL;
+	res = (percl_t) calloc(1, sizeof(struct sLayerPerc));
+	if (res) {
+		long sem = -13;
+		int i = 0;
+		res->neuralIn = layer->neuralOut;
+		res->neuralOut = layer->neuralOut;
+		res->numTypes = layer->numTypes;
+		res->pruningMode = layer->pruningMode;
+		res->neuronOfTypes = calloc(res->numTypes, sizeof(int));
+		res->types = calloc(res->numTypes, sizeof(neuralType));
+		for (i = 0; i < res->numTypes; i++) {
+			res->neuronOfTypes[i] = layer->neuronOfTypes[i];
+			res->types[i] = layer->types[i];
+		}
+		res->nextLayer = layer->nextLayer;
+		res->prevLayer = layer;
+		res->out = (double *) calloc(layer->neuralOut, sizeof(double));
+		res->delta = (double *) calloc(layer->neuralOut, sizeof(double));
+		res->W = (double **) calloc(layer->neuralOut, sizeof(double *));
+		res->dWmoment = (double **) calloc(layer->neuralOut, sizeof(double *));
+		if (res->W && res->dWmoment && res->out && res->delta) {
+			int ok = 1;
+			int neuralIn = layer->neuralOut;
+			for (i = 0; ok && i < layer->neuralOut; i++) {
+				res->delta[i] = .0;
+				res->out[i] = .0;
+				res->W[i] = NULL;
+				res->dWmoment[i] = NULL;
+				res->W[i] = (double *) calloc(neuralIn + 1, sizeof(double));
+				res->dWmoment[i] = (double *) calloc(neuralIn + 1,
+						sizeof(double));
+				if (res->W[i] && res->dWmoment[i]) {
+					int j = 0;
+					for (j = 0; j < neuralIn + 1; j++) {
+						if (j == i) {
+							res->W[i][j] = copyPercent/* * layer->W[i][j]*/;
+						} else {
+							res->W[i][j] = (1.0 - copyPercent)
+									* (ran2(&sem) - .5)
+									/ (double) (neuralIn + 1);
+						}
+						res->dWmoment[i][j] = .0;
+					}
+				} else {
+					ok = 0;
+					res = percl_destroy(res);
+				}
+			}
+		} else {
+			res = percl_destroy(res);
+		}
+	}
+	if (res) {
+		if (layer->nextLayer) {
+			layer->nextLayer->prevLayer = res;
+		}
+		layer->nextLayer = res;
+	}
+	return res;
+}
+
+percl_t percl_add_neuron(percl_t layer) {
+	if (layer) {
+		long sem = -71;
+		int i = 0;
+		if (layer->types[layer->numTypes - 1] == tanhyp) {
+			layer->neuronOfTypes[layer->numTypes - 1]++;
+		} else {
+			layer->types = (neuralType*) realloc(layer->types,
+					sizeof(neuralType) * (layer->numTypes + 1));
+			layer->types[layer->numTypes] = tanhyp;
+			layer->neuronOfTypes = (int*) realloc(layer->neuronOfTypes,
+					sizeof(int) * (layer->numTypes + 1));
+			layer->neuronOfTypes[layer->numTypes] = 1;
+			layer->numTypes++;
+		}
+		layer->W = (double**) realloc(layer->W,
+				sizeof(double*) * (layer->neuralOut + 1));
+		layer->dWmoment = (double**) realloc(layer->dWmoment,
+				sizeof(double*) * (layer->neuralOut + 1));
+		layer->W[layer->neuralOut] = (double*) calloc(layer->neuralIn + 1,
+				sizeof(double));
+		layer->dWmoment[layer->neuralOut] = (double*) calloc(
+				layer->neuralIn + 1, sizeof(double));
+		for (i = 0; i < layer->neuralIn + 1; i++) {
+			layer->W[layer->neuralOut][i] = (ran2(&sem) - .5)
+					/ (double) (layer->neuralIn + 1);
+			layer->dWmoment[layer->neuralOut][i] = .0;
+		}
+		layer->out = (double *) realloc(layer->out,
+				(layer->neuralOut + 1) * sizeof(double));
+		layer->delta = (double *) realloc(layer->delta,
+				(layer->neuralOut + 1) * sizeof(double));
+		layer->delta[layer->neuralOut] = .0;
+		layer->out[layer->neuralOut] = .0;
+
+		layer->neuralOut++;
+		if (layer->nextLayer) {
+			percl_t nextLayer = layer->nextLayer;
+			nextLayer->neuralIn++;
+			for (i = 0; i < nextLayer->neuralOut; i++) {
+				nextLayer->W[i] = (double*) realloc(nextLayer->W[i],
+						(nextLayer->neuralIn + 1) * sizeof(double));
+				nextLayer->dWmoment[i] = (double*) realloc(
+						nextLayer->dWmoment[i],
+						(nextLayer->neuralIn + 1) * sizeof(double));
+				nextLayer->W[i][nextLayer->neuralIn] =
+						nextLayer->W[i][nextLayer->neuralIn - 1];
+				nextLayer->dWmoment[i][nextLayer->neuralIn] =
+						nextLayer->dWmoment[i][nextLayer->neuralIn - 1];
+				nextLayer->W[i][nextLayer->neuralIn - 1] = (ran2(&sem) - .5)
+						/ (double) (nextLayer->neuralIn + 1);
+				nextLayer->dWmoment[i][nextLayer->neuralIn - 1] = .0;
+			}
+		}
+	}
+	return layer;
 }
 
 double *percl_eval(percl_t layer, int derived) {

@@ -115,13 +115,13 @@ int ejer2(int hypORln, int printRN) {
  */
 int ejer1F(int selecFun, int p, int printRN) {
 	int i = 0, conMomento = 1;
-	double **res = NULL, **in = NULL, *test = NULL;
+	double **res = NULL, **in = NULL/*, *test = NULL*/;
 	long sem = -131;
 	res = (double**) calloc(p, sizeof(double*));
 	in = (double**) calloc(p, sizeof(double*));
 	if (res && in) {
 		percnn_t red = NULL;
-		int numNeuronas[3];
+		int numLayers = 2, numNeuronas[3], adaptGrowMode = 0;
 		neuralType tipoNeuronas[3];
 		for (i = 0; i < p; i++) {
 			res[i] = (double*) calloc(1, sizeof(double));
@@ -179,6 +179,28 @@ int ejer1F(int selecFun, int p, int printRN) {
 				res[i][0] = log(in[i][0]);
 			}
 			break;
+		case 7:
+			numLayers=1;
+			numNeuronas[1] = 1;
+			tipoNeuronas[1] = lineal;
+			adaptGrowMode = 1;
+			printRN=1;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = 1.0 / in[i][0];
+			}
+			break;
+		case 8:
+			numLayers=1;
+			numNeuronas[1] = 1;
+			tipoNeuronas[1] = lineal;
+			adaptGrowMode = 1;
+			printRN=1;
+			for (i = 0; i < p; i++) {
+				in[i][0] = 1.0 + ran2(&sem) * 4.0;
+				res[i][0] = log(in[i][0]);
+			}
+			break;
 		default:
 			if (p < 5) {
 				printf("f(x):\n\n");
@@ -195,15 +217,16 @@ int ejer1F(int selecFun, int p, int printRN) {
 			break;
 		}
 		if (selecFun) {
-			red = percnn_create(2, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
+			red = percnn_create(numLayers, numNeuronas, tipoNeuronas, NULL, NULL, &sem);
 			if (red) {
 				double err = ((double) (numNeuronas[1] - 2)) / 200.0;
 				int numIntentos = 0;
 				if (!conMomento)
 					percnn_set_alphaMoment(red, .0);
+				percnn_setAdaptativelyGrowMode(red, adaptGrowMode);
 				percnn_set_lineError(red, 100000, err, err, 0);
 				numIntentos = percnn_learn(red, p, in, res, online);
-				if (numIntentos) {
+				if (numIntentos) {printRN++;/*
 					printf(
 							"\nIntentos: %i\nred(x): x in [1,5]: (solo %i puntos aleatorios)\n\n",
 							numIntentos, p);
@@ -224,8 +247,12 @@ int ejer1F(int selecFun, int p, int printRN) {
 						printf("%s\n\n\n", str);
 						free(str);
 					}
-				} else
-					printf("No aprendí :-S :'(  TT__TT\n");
+				} else {
+					char *str = percnn_to_str(red);
+					printf("%s\n\n\n", str);
+					free(str);
+					printf("No aprendí :-S :'(  TT__TT %i\n",percnn_getAdaptativelyGrowMode(red));
+				*/}
 				red = percnn_destroy(red);
 			} else
 				printf("OO OOO\n");
