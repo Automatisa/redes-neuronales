@@ -18,6 +18,7 @@
 struct sLayerPerc {
 	int neuralIn, neuralOut, numTypes, *neuronOfTypes;
 	int pruningMode;
+	long *sem;
 	neuralType* types;
 	percl_t nextLayer, prevLayer;
 	double *out, *delta, **W, **dWmoment;
@@ -52,6 +53,7 @@ percl_t percl_create(int neuralIn, int neuralOut, neuralType type,
 		res->neuralOut = neuralOut;
 		res->numTypes = 1;
 		res->pruningMode = 0;
+		res->sem = sem;
 		res->neuronOfTypes = calloc(res->numTypes, sizeof(int));
 		res->neuronOfTypes[0] = neuralOut;
 		res->types = calloc(res->numTypes, sizeof(neuralType));
@@ -98,6 +100,7 @@ percl_t percl_create_MultiTypes(int neuralIn, int neuralOut,
 	res = (percl_t) calloc(1, sizeof(struct sLayerPerc));
 	if (res) {
 		int i = 0;
+		res->sem = sem;
 		res->neuralIn = neuralIn;
 		res->neuralOut = neuralOut;
 		res->numTypes = neuralTypesByLayer;
@@ -148,6 +151,7 @@ percl_t percl_create_with_memory(int neuralIn, int neuralOut, neuralType type,
 	res = (percl_t) calloc(1, sizeof(struct sLayerPerc));
 	if (res) {
 		int i = 0;
+		res->sem = NULL;
 		res->neuralIn = neuralIn;
 		res->neuralOut = neuralOut;
 		res->numTypes = 1;
@@ -333,7 +337,6 @@ percl_t percl_add_extension_layer(percl_t layer, double copyPercent) {
 	percl_t res = NULL;
 	res = (percl_t) calloc(1, sizeof(struct sLayerPerc));
 	if (res) {
-		long sem = -13;
 		int i = 0;
 		res->neuralIn = layer->neuralOut;
 		res->neuralOut = layer->neuralOut;
@@ -369,7 +372,7 @@ percl_t percl_add_extension_layer(percl_t layer, double copyPercent) {
 							res->W[i][j] = copyPercent/* * layer->W[i][j]*/;
 						} else {
 							res->W[i][j] = (1.0 - copyPercent)
-									* (ran2(&sem) - .5)
+									* (ran2(layer->sem) - .5)
 									/ (double) (neuralIn + 1);
 						}
 						res->dWmoment[i][j] = .0;
@@ -394,7 +397,6 @@ percl_t percl_add_extension_layer(percl_t layer, double copyPercent) {
 
 percl_t percl_add_neuron(percl_t layer) {
 	if (layer) {
-		long sem = -71;
 		int i = 0;
 		if (layer->types[layer->numTypes - 1] == tanhyp) {
 			layer->neuronOfTypes[layer->numTypes - 1]++;
@@ -416,7 +418,7 @@ percl_t percl_add_neuron(percl_t layer) {
 		layer->dWmoment[layer->neuralOut] = (double*) calloc(
 				layer->neuralIn + 1, sizeof(double));
 		for (i = 0; i < layer->neuralIn + 1; i++) {
-			layer->W[layer->neuralOut][i] = (ran2(&sem) - .5)
+			layer->W[layer->neuralOut][i] = (ran2(layer->sem) - .5)
 					/ (double) (layer->neuralIn + 1);
 			layer->dWmoment[layer->neuralOut][i] = .0;
 		}
@@ -441,7 +443,7 @@ percl_t percl_add_neuron(percl_t layer) {
 						nextLayer->W[i][nextLayer->neuralIn - 1];
 				nextLayer->dWmoment[i][nextLayer->neuralIn] =
 						nextLayer->dWmoment[i][nextLayer->neuralIn - 1];
-				nextLayer->W[i][nextLayer->neuralIn - 1] = (ran2(&sem) - .5)
+				nextLayer->W[i][nextLayer->neuralIn - 1] = (ran2(layer->sem) - .5)
 						/ (double) (nextLayer->neuralIn + 1);
 				nextLayer->dWmoment[i][nextLayer->neuralIn - 1] = .0;
 			}

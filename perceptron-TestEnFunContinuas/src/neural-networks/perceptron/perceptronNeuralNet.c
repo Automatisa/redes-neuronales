@@ -747,7 +747,7 @@ int percnn_learn(percnn_t net, int numData, double** in, double** desired,
 		int *selec = NULL;
 		selec = (int *) calloc(numData, sizeof(int));
 		if (selec) {
-			int numOut = percnn_get_num_Out(net), limitEventRep = 1,
+			int numOut = percnn_get_num_Out(net), limitEventRep = 2,
 					addNeuronEveRep = 0, addLayerEveRep = 0;
 			double *baseFVU = NULL, *fvu = NULL, *fvuOld = NULL,
 					*fvuOld2 = NULL;
@@ -817,25 +817,57 @@ int percnn_learn(percnn_t net, int numData, double** in, double** desired,
 				if (net->adapGrowMode && fvu && baseFVU && fvuOld && fvuOld2) {
 					double *fvuTmpSwap = fvu, fvuMAX = -1.0;
 					for (i = 0; i < numOut; i++) {
-						double stopRatio;
+						double stopRatioNeuron, stopRatioLayer;
 						fvu[i] = fvu[i] / baseFVU[i];
 						if (fvuMAX < fvu[i]) {
 							fvuMAX = fvu[i];
 						}
-						stopRatio = (fvuOld[i] - fvu[i]) / fvuOld[i];
-						needOtherNeuron |= (.0 < stopRatio
-								&& stopRatio < net->stopRatioNeurons);
-						stopRatio = (fvuOld2[i] - fvu[i]) / fvuOld2[i];
-						needOtherLayer |= (.0 < stopRatio
-								&& stopRatio < net->stopRatioLayer);
+						stopRatioNeuron = (fvuOld[i] - fvu[i]) / fvuOld[i];
+						needOtherNeuron |= (.0 < stopRatioNeuron
+								&& stopRatioNeuron < net->stopRatioNeurons);
+						stopRatioLayer = (fvuOld2[i] - fvu[i]) / fvuOld2[i];
+						needOtherLayer |= ((.0 < stopRatioLayer
+								&& stopRatioLayer < net->stopRatioLayer)
+								&& (.0 < stopRatioNeuron
+										&& stopRatioNeuron
+												< net->stopRatioNeurons));
 					}
-					net->adapGrowMode = net->fvuTol < fvuMAX;/*small to large num of data large to few data*/
+					/*net->adapGrowMode = net->fvuTol < fvuMAX;/ *small to large num of data large to few data*/
 					if (net->adapGrowMode) {
 						if (needOtherLayer || needOtherNeuron) {
 							restConcepts = numData;
 							for (i = 0; i < numData; i++) {
 								selec[i] = i;
 							}
+						}
+						if (needOtherNeuron) {
+							addNeuronEveRep++;
+							if (limitEventRep <= addNeuronEveRep) {
+								addNeuronEveRep = 0;
+								if (percl_get_prevLayer(net->last)
+										== net->first) {
+									net->last = percl_add_extension_layer(
+											net->last, net->copyRatio);
+									net->numLayers++;
+									percl_add_neuron(
+											percl_get_prevLayer(net->last));
+									for (i = 0; i < numOut; i++) {
+										fvu[i] = fvu[i] * (double) numData;
+										fvuOld[i] = fvuOld[i]
+												* (double) numData;
+										fvuOld2[i] = fvuOld2[i]
+												* (double) numData;
+									}
+								} else {
+									percl_add_neuron(
+											percl_get_prevLayer(net->last));
+									for (i = 0; i < numOut; i++) {
+										fvuOld2[i] = fvu[i];
+									}
+								}
+							}
+						} else {
+							addNeuronEveRep = 0;
 						}
 						if (needOtherLayer) {
 							addLayerEveRep++;
@@ -854,47 +886,16 @@ int percnn_learn(percnn_t net, int numData, double** in, double** desired,
 							}
 						} else {
 							addLayerEveRep = 0;
-							if (needOtherNeuron) {
-								addNeuronEveRep++;
-								if (limitEventRep <= addNeuronEveRep) {
-									addNeuronEveRep = 0;
-									if (percl_get_prevLayer(net->last)
-											== net->first) {
-										net->last = percl_add_extension_layer(
-												net->last,
-												net->copyRatio);
-										net->numLayers++;
-										percl_add_neuron(
-												percl_get_prevLayer(net->last));
-										for (i = 0; i < numOut; i++) {
-											fvu[i] = fvu[i]
-													* (double) numData;
-											fvuOld[i] = fvuOld[i]
-													* (double) numData;
-											fvuOld2[i] = fvuOld2[i]
-													* (double) numData;
-										}
-									} else {
-										percl_add_neuron(
-												percl_get_prevLayer(net->last));
-										for (i = 0; i < numOut; i++) {
-											fvuOld2[i] = fvu[i];
-										}
-									}
-								}
-							} else {
-								addNeuronEveRep = 0;
-							}
 						}
 					}
 					fvu = fvuOld;
 					fvuOld = fvuTmpSwap;
-				}if(net->adapGrowMode)
+				}/** /if(net->adapGrowMode)
 				printf(
 						"%ld\t%f\n",
 						net->totalAttemps-net->attempsRemaining,
 						fvuOld[0]);
-				/** /printf(
+				/ ** /printf(
 						"IntenRest=%ld\tConcFalta=%i\tError=%f\tErrorFailer=%f\tNu=%g\n",
 						net->attempsRemaining, restConcepts,
 						pActError / (double) numData,

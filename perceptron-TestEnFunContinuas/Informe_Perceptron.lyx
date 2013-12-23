@@ -77,18 +77,19 @@ REDES NEURONALES
 \begin_inset Newline newline
 \end_inset
 
-Practico Final
+Trabajo Final
 \begin_inset Newline newline
 \end_inset
 
 
 \family default
 \series default
-Red Feedforward Multicapas
+Red Feed Forward Multicapas
 \begin_inset Newline newline
 \end_inset
 
-Análisis sobre Funciones Continuas 
+Análisis de extrapolación sobre Funciones Continuas y Parcialmente Continuas
+ 
 \size default
 
 \begin_inset VSpace vfill
@@ -98,9 +99,12 @@ Análisis sobre Funciones Continuas
 \end_layout
 
 \begin_layout Author
-Prof: F.
- A.
+Prof: Francisco A.
  Tamarit
+\begin_inset Newline newline
+\end_inset
+
+Prof: Sergio Cannas
 \begin_inset Newline newline
 \end_inset
 
@@ -120,23 +124,191 @@ Autor: Eric N.
 \end_layout
 
 \begin_layout Part*
+Resumen
+\end_layout
+
+\begin_layout Standard
+Las redes neuronales feed forward (feed forward neural networks, desde ahora
+ FFNN) se usan en muchos casos para aproximación de funciones.
+ Para entrenarlas se les brinda cierto conjunto de datos, los cuales luego
+ interpolaran.
+ Por lo general el objetivo es trabajar con la FFNN aproximando a la función
+ dentro de cierto radio entre los puntos de entrenamiento, pero uno también
+ podría intentar trabajar con la FFNN fuera de el radio que cubren los puntos
+ de entrenamiento (pasar de interpolar a extrapolar).
+ La calidad con que la FFNN aproxime a la función objetivo dependerá de
+ muchos factores (cantidad de puntos de entrenamiento, estructura de la
+ FFNN, función de activación de cada capa de la FFNN, etc).
+ Muchos de estos factores quedan a criterio de cada desarrollador/investigador,
+ dependiendo del problema y casi siempre trabajando por prueba y error.
+ En la literatura no existe un criterio estándar aceptado, o método para
+ la selección de todos estos parámetros.
+ Sobre todo en cuanto a estructura y funciones de activación.
+ Por lo general se eligen una capa o dos y con funciones de activación 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ (tangente hiperbólica) o la función lineal.
+\end_layout
+
+\begin_layout Standard
+En este trabajo nos centramos en el análisis de distintas variantes de estructur
+as y funciones de activación, haciendo inca pie en como se comportan al
+ momento de la extrapolación.
+ Analizamos tres escenarios distintos de funciones continuas o parcialmente
+ continuas y en cada uno comparamos tres redes, con estructura tradicional,
+ con función de activación cambiada y una red cuya estructura crece a demanda
+ durante el entrenamiento (construcción adaptativa).
+\end_layout
+
+\begin_layout Part*
 Introducción
 \end_layout
 
 \begin_layout Standard
-Este trabajo esta basado en la aplicación de redes neuronales feedforward
- multicapas aplicadas funciones continuas.
- Este tema fue planteado en el practico 3 de la asignatura, pero ahora lo
- analizaremos algunas características y problemas que no se plantearon en
- el practico anterior.
-\end_layout
-
-\begin_layout Section*
-Las redes neuronales Feedforward
+Las redes neuronales perceptron multicapas o FFNN han sido ampliamente utilizada
+s debido a su simplicidad y buenos resultados, aunque en ocasiones fallan
+ en proveer una adecuada solución, debido a una mala arquitectura, insuficiente
+ número de neuronas, insuficientes número de ciclos de entrenamiento, mala
+ elección de la función de activación o cantidad insuficiente de información
+ para el entrenamiento respecto de lo que se desea aproximar o generalizar.
+ El desempeño del entrenamiento de una red neuronal depende del algoritmo
+ de aprendizaje utilizado, del número de capas ocultas, del número de neuronas
+ en cada capa oculta, de la conectividad o arquitectura y también del tipo
+ de función de activación que se elija para cada neurona.
+ 
 \end_layout
 
 \begin_layout Standard
-La red neuronal feedforward fue el primer tipo y posiblemente el más simple
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+Motivación: ¿Por qué es necesario elegir bien las funciones de activación?
+\end_layout
+
+\begin_layout Standard
+Elegir bien la estructura de la red es importante ya que determina que tan
+ bien asimila los conceptos que tratamos de entrenar en la FFNN.
+ Una red pequeña (con pocas neuronas en su capa oculta) necesita demasiado
+ entrenamiento y quizás sobre entrenamiento para aprender algunos conceptos
+ y probablemente no generalice bien.
+ Una red con pocas capas ocultas, puede no tener capacidad suficiente para
+ aprender y generalizar ciertas funciones.
+\end_layout
+
+\begin_layout Standard
+Así también es importante saber cuando es necesario usar un tipo de función
+ de activación y cuando otro tipo.
+\end_layout
+
+\begin_layout Standard
+Digamos que se quiere emular cierto comportamiento de algún sistema y se
+ sabe que la función que describe ese comportamiento tiene ciertas característic
+as, pero se desconoce la función en si misma.
+ (por ejemplo se que la función tiene una fuerte componente sinusoidal,
+ o es producto de otras funciones, o que es cuadrática y creciente, o simplement
+e no esta acotada y es un polinomio de grado mayor a 1...).
+ Además el conjunto de datos actual es limitado y describe una parte del
+ comportamiento, pero se sabe que a futuro el sistema se comportara bajo
+ las mismas reglas pero en otro rango de valores para los parámetros de
+ entrada.
+ Esto implicaría que la red trabaje extrapolando datos, por lo que (en este
+ tipo de casos) es muy importante a la hora de construir la FFNN, no solo
+ que interpole bien el conjunto de entrenamiento, sino también que a nivel
+ estructura capture bien la función que intenta imitar.
+\end_layout
+
+\begin_layout Standard
+Por ejemplo, en el caso de que la función objetivo fuere de ramas ascendentes
+ y solo este acotada por debajo, no seria una buena idea tratar de aproximarla
+ con una FFNN de una capa oculta 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ y salida lineal, ya que al tratar de extrapolar no podría imitar las ramas
+ ascendentes.
+ Entonces supongo que puedo obtener un mejor resultado entrenando una red
+ neuronal que tenga cierta función de activación diferente en algunas neuronas.
+\end_layout
+
+\begin_layout Section*
+Objetivos
+\end_layout
+
+\begin_layout Standard
+En este informe analizaremos a las FFNN aplicadas a funciones continuas.
+ Para ello se plantean los siguientes objetivos:
+\end_layout
+
+\begin_layout Enumerate
+Aproximaremos las funciones 
+\begin_inset Formula $\tfrac{1}{x}$
+\end_inset
+
+ y 
+\begin_inset Formula $\log(x)$
+\end_inset
+
+, trataremos de extrapolar y compararemos con alternativas.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Aproximaremos la función 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ con FFNN.
+ Analizaremos distintas opciones y tomaremos ejemplos de extrapolación.
+\end_layout
+
+\begin_layout Enumerate
+Analizaremos distintas opciones para aproximar la función 
+\begin_inset Formula $sinc(x)*sinc(y)=\frac{sin(x)}{x}*\frac{sin(y)}{y}$
+\end_inset
+
+ y analizaremos la extrapolación.
+\end_layout
+
+\begin_layout Standard
+En cada uno de estos puntos trabajaremos con FFNN construidas de distintas
+ maneras:
+\end_layout
+
+\begin_layout Itemize
+FFNN con elección de parámetros y estructura de manera tradicional (1 capa
+ oculta con función de activación 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ y capa de salida con función de activación lineal)
+\end_layout
+
+\begin_layout Itemize
+FFNN con función de activación ad-hoc (particular para el caso) en la capa
+ oculta, e incluso mas de un tipo de función de activación por capa.
+\end_layout
+
+\begin_layout Itemize
+FFNN con crecimiento adaptativo.
+ Donde la propia red alcanza la mejor estructura dependiendo del conjunto
+ de entrenamiento y pocos parámetro mas.
+\end_layout
+
+\begin_layout Section*
+Campo de conocimiento
+\end_layout
+
+\begin_layout Subsection*
+Generalidades sobre las redes neuronales Feed Forward
+\end_layout
+
+\begin_layout Standard
+La red neuronal feed forward fue el primer tipo y posiblemente el más simple
  de red neuronal artificial ideado.
  En esta red, la información se mueve en una sola dirección (hacia adelante),
  a partir de los nodos de entrada, a través de los nodos ocultos (si los
@@ -154,7 +326,7 @@ Están inspiradas en redes neuronales biológicas (en particular, en el sistema
 Este tipo de redes son aplicada para aprendizaje de patrones, mapeo de funciones
  (control) y clasificación, principalmente.
  Una de las aplicaciones que tiene es para el aprendizaje de funciones con
- su dominio e imagen en espacios n-dimencionales de tipo binario, por eso
+ su dominio e imagen en espacios n-dimensionales de tipo binario, por eso
  estas redes son también conocidas como redes perceptron.
  Pero el modelo no limita solo a casos binarios, ya que se puede variar
  la función de activación de las neuronas (neuronas binarias, lineales,
@@ -169,55 +341,28 @@ En particular en este trabajo planteamos la hipótesis de que la correcta
 \end_layout
 
 \begin_layout Section*
-Objetivos
+Alcance del trabajo y Marco general 
 \end_layout
 
 \begin_layout Standard
-En este informe analizaremos algunos aspectos de las redes Feedforward aplicadas
- a funciones continuas.
- Para ello se plantean los siguientes objetivos:
+En este trabajo solo se plantea un enfoque o manera en la que se pueden
+ usar las FFNN en donde se pueden producir problemas (al extrapolar).
+ En este informe se presentan resultados a modo comparativo de distintas
+ aproximaciones por distintas estrategias.
 \end_layout
 
-\begin_layout Enumerate
-Aproximaremos las funciones 
-\begin_inset Formula $\tfrac{1}{x}$
-\end_inset
-
- y 
-\begin_inset Formula $\log(x)$
-\end_inset
-
-, esta vez trataremos de extrapolar y compararemos con alternativas.
- 
-\end_layout
-
-\begin_layout Enumerate
-¿Que tan bien podemos aproximar una función binaria (dominio en 
-\begin_inset Formula $(X;Y)$
-\end_inset
-
-) (por ejemplo 
-\begin_inset Formula $f(x,y)=x*y$
-\end_inset
-
- o 
-\begin_inset Formula $f(x,y)=\frac{x}{y}$
-\end_inset
-
-) con redes feedforward multicapas? Analizaremos distintas opciones y tomaremos
- ejemplos de extrapolación.
-\end_layout
-
-\begin_layout Enumerate
-Analizaremos distintas opciones para aproximar la función 
-\begin_inset Formula $sinc(x)*sinc(y)=\frac{sin(x)}{x}*\frac{sin(y)}{y}$
+\begin_layout Standard
+No se pretende probar, ni afirmar nada.
+ Solo es un trabajo de investigación exploratorio donde exponemos e interpretamo
+s resultados.
+\begin_inset Newpage pagebreak
 \end_inset
 
 
 \end_layout
 
 \begin_layout Section*
-Detalles de la implementación
+Sobre la implementación
 \end_layout
 
 \begin_layout Standard
@@ -226,11 +371,12 @@ He desarrollado mi propia librería open source para el modelo perceptron
 \end_layout
 
 \begin_layout Standard
-No voy a entrar en detalles, algunas características implementadas son:
+No voy a entrar en detalles sobre la implementación.
+ Algunas características implementadas son:
 \end_layout
 
 \begin_layout Itemize
-Implementación de redes feedforward simple y multicapas.
+Implementación de redes feed forward simple y multicapas.
  (definición de numero de capas, tipo de neurona en la capa y numero de
  neuronas por capa al momento de construcción de la red)
 \end_layout
@@ -265,6 +411,11 @@ Parámetro de adaptación auto-regulado en un rango preseleccionado (rango
 )
 \end_layout
 
+\begin_layout Itemize
+Implementación de crecimiento adaptativo de la red feed forward durante
+ el entrenamiento.
+\end_layout
+
 \begin_layout Standard
 Para mas información de las características y del proceso de desarrollo
  ver en la pagina del proyecto:
@@ -274,7 +425,7 @@ Para mas información de las características y del proceso de desarrollo
 El proyecto (en general) se encuentra en 
 \begin_inset CommandInset href
 LatexCommand href
-target "http://bettercodes.org/projects/neural-network"
+target "https://bitbucket.org/ericnjurio/neural-networks"
 
 \end_inset
 
@@ -290,24 +441,134 @@ target "http://code.google.com/p/redes-neuronales/"
 \end_inset
 
  (utiliza librerías del proyecto recién mencionado)
+\begin_inset Newpage pagebreak
+\end_inset
+
+
 \end_layout
 
 \begin_layout Part*
-Red Feedforward Perceptron Multicapas
-\end_layout
-
-\begin_layout Subsection*
 Aproximación de funciones continuas
 \end_layout
 
+\begin_layout Section*
+Variantes de Redes Feed Forward Multicapas
+\end_layout
+
 \begin_layout Standard
-Implementé un programa de aprendizaje usando el algoritmo de backpropagation
- (on-line) en una red neuronal con una capa oculta de 
+En todos los escenarios que plantearemos a continuación, trataremos de aproximar
+ funciones en 2 dimensiones y en 3 dimensiones, por lo que las redes neuronales
+ tendrán 1 o 2 entradas y solo una salida.
+\end_layout
+
+\begin_layout Standard
+En cada uno de los escenarios planteados en el trabajo compararemos el comportam
+iento de tres redes neuronales.
+\end_layout
+
+\begin_layout Enumerate
+En el primer caso veremos FFNN con construcción típicas con una capa oculta
+ de función de activación 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ y capa de salida lineal.
+ Para cada escenario usaremos distintas cantidades de neuronas según sea
+ necesario.
+\end_layout
+
+\begin_layout Enumerate
+En el segundo caso veremos FFNN con una capa oculta pero distintas funciones
+ de activación según sea necesario, inclusive con capas ocultas mixtas (una
+ capa oculta con mas de un tipo de función de activación) y capa de salida
+ lineal.
+\end_layout
+
+\begin_layout Enumerate
+En el tercer caso veremos FFNN con crecimiento adaptativo la cual puede
+ variar en cantidad de neuronas por capas y en cantidad de capas según sea
+ necesario, acorde al error FVU (fraction of variance unexplained), el cual
+ es indicativo de si la red esta lo suficientemente adaptada a los datos.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+FVU=\frac{\sum_{j=1}^{P}\left(\hat{g}\left(x_{j}\right)-g\left(x_{j}\right)\right)^{2}}{\sum_{j=1}^{P}\left(g\left(x_{j}\right)-\overline{g}\right)^{2}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Donde 
+\begin_inset Formula $g\left(·\right)$
+\end_inset
+
+ es la función a aproximar por FFNN, 
+\begin_inset Formula $\hat{g}\left(·\right)$
+\end_inset
+
+ es la estimación de 
+\begin_inset Formula $g\left(·\right)$
+\end_inset
+
+ dada por FFNN y 
+\begin_inset Formula $\overline{g}$
+\end_inset
+
+ es la media de 
+\begin_inset Formula $g\left(·\right)$
+\end_inset
+
+, 
+\begin_inset Formula $x_{j}$
+\end_inset
+
+ es una muestra (la j-esima) del conjunto de puntos de entrenamiento y 
+\begin_inset Formula $P$
+\end_inset
+
+ es el total de muestras en el conjunto de entrenamiento.
+ Para mas detalles sobre el algoritmo ver las referencias.
+\end_layout
+
+\begin_layout Standard
+Dado que este tipo de red que crece, en algún punto cuando agrega nuevas
+ capas, duplica la ultima capa oculta o en el caso de no tener capa oculta,
+ genera una basado en la capa de salida, clonándola y por tener la particularida
+d de que nuestra capa de salida siempre sera lineal; en consecuencia tenemos
+ que en cada nueva capa que se agregue tendremos al menos una neurona de
+ función de activación de tipo lineal.
+ Luego las salidas tendrán siempre una componente lineal directa de las
+ entradas (mas o menos ponderada dependiendo el caso).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Análisis de funciones continuas en Interpolación y Extrapolación
+\end_layout
+
+\begin_layout Standard
+Para todos los casos usamos el algoritmo de aprendizaje backpropagation
+ (on-line) en FFNN con capa oculta de 
 \begin_inset Formula $M$
 \end_inset
 
  neuronas para aproximar funciones continuas de una variable 
 \begin_inset Formula $f(x)$
+\end_inset
+
+ o dos variables 
+\begin_inset Formula $f(x,y)$
 \end_inset
 
 .
@@ -316,7 +577,8 @@ Implementé un programa de aprendizaje usando el algoritmo de backpropagation
 \begin_inset Formula $\tanh(x)$
 \end_inset
 
- y para la neurona de la capa de salida usamos la función lineal: 
+ (en la mayoría de los casos) y para la neurona de la capa de salida usamos
+ la función lineal: 
 \begin_inset Formula $OutNet=\sum_{i=1}^{M}(outHide_{i}*w_{i})$
 \end_inset
 
@@ -331,6 +593,18 @@ Implementé un programa de aprendizaje usando el algoritmo de backpropagation
  son los pesos sinápticos de entrada a la neurona lineal.
 \end_layout
 
+\begin_layout Subsection*
+Escenario 1: Aproximación de 
+\begin_inset Formula $\frac{1}{X}$
+\end_inset
+
+ y 
+\begin_inset Formula $\ln(x)$
+\end_inset
+
+ 
+\end_layout
+
 \begin_layout Standard
 Entrenamos sobre 
 \begin_inset Formula $p$
@@ -342,7 +616,11 @@ Entrenamos sobre
 \end_inset
 
 .
- Imponiendo un limite de tolerancia de error de aprendizaje por patrón .
+ Imponiendo un limite 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ de tolerancia de error de aprendizaje por patrón.
  Aproximamos las siguientes funciones en el intervalo 
 \begin_inset Formula $x\in[1;5]$
 \end_inset
@@ -389,89 +667,98 @@ Entrenamos sobre
 \end_layout
 
 \begin_layout Standard
-A continuación podemos ver las gráficas simultáneas de la función a aproximar,
- la función de ajuste aprendida por la red y los puntos utilizados para
- obtener dicha aproximación.
-\end_layout
-
-\begin_layout Subsubsection*
-Borrador de cálculos
-\end_layout
-
-\begin_layout Standard
-Demostración de que se puede escribir la 
-\begin_inset Formula $f(x,y)=x*y$
+Donde 
+\begin_inset Formula $M$
 \end_inset
 
- en términos de sumas constantes y funciones un-arias
+ es la cantidad de neuronas en la capa oculta.
 \end_layout
 
 \begin_layout Standard
-Sabemos la identidad 
-\begin_inset Formula $a^{2}-b^{2}=(a+b)*(a-b)$
-\end_inset
-
- digamos que 
-\begin_inset Formula $x=a+b$
-\end_inset
-
- y que 
-\begin_inset Formula $y=a-b$
-\end_inset
-
-.
- Luego 
-\begin_inset Formula $x*y=(a+b)*(a-b)$
-\end_inset
-
- ie.
- 
-\begin_inset Formula $x*y=a^{2}-b^{2}$
-\end_inset
-
-.
- Escribamos 
-\begin_inset Formula $a$
-\end_inset
-
- en función de 
-\begin_inset Formula $x$
-\end_inset
-
- y lo mismo con 
-\begin_inset Formula $b$
-\end_inset
-
-.
- 
-\begin_inset Formula $a=x-b$
+Para cada función (
+\begin_inset Formula $\frac{1}{X}$
 \end_inset
 
  y 
-\begin_inset Formula $b=a-y\equiv b=x-b-y\equiv b=\frac{x-y}{2}$
+\begin_inset Formula $\ln(x)$
 \end_inset
 
- ie.
+) realizaremos aproximaciones con los tipos de redes neuronales plateados
+ anteriormente.
+ Para nuestro caso de 
+\begin_inset Quotes eld
+\end_inset
+
+FFNN con función de activación no convencional
+\begin_inset Quotes erd
+\end_inset
+
+ analizaremos cada función con otras dos funciones de activación: 
+\begin_inset Formula $f_{act}(x)=\frac{1}{(x^{2}+0.005)}$
+\end_inset
+
+ y 
+\begin_inset Formula $f_{act}(x)=ln(x^{2}+0.05)$
+\end_inset
+
  
-\begin_inset Formula $a=x-\frac{x-y}{2}\equiv a=\frac{x+y}{2}$
-\end_inset
-
- por lo tanto 
-\begin_inset Formula $x*y=(\frac{x+y}{2})^{2}-(\frac{x-y}{2})^{2}$
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Standard
-Demostración de que se puede escribir la 
-\begin_inset Formula $f(x,y)=\frac{x}{y}$
+Dado que en general, las aproximaciones son buenas, resulta difícil comparar
+ a simple vista las funciones y las aproximaciones, por lo que decidimos
+ graficar la diferencia 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang english
+
+\begin_inset Formula $g\left(x_{j}\right)-\hat{g}\left(x_{j}\right)$
 \end_inset
 
- en términos de sumas constantes y funciones un-arias
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang spanish
+ (erro de aproximación).
+ Donde 
+\begin_inset Formula $g\left(·\right)$
+\end_inset
+
+ es la función a aproximar por FFNN y 
+\begin_inset Formula $\hat{g}\left(·\right)$
+\end_inset
+
+ es la estimación de 
+\begin_inset Formula $g\left(·\right)$
+\end_inset
+
+ dada por FFNN
 \end_layout
 
-\begin_layout Subsubsection*
+\begin_layout Standard
+A continuación podemos ver las gráficas simultáneas de el error de aproximación
+ para distintas cantidades de puntos de entrenamientos.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Newpage pagebreak
 \end_inset
 
@@ -487,27 +774,39 @@ Aproximación de
 \end_layout
 
 \begin_layout Standard
-A continuación las Figuras 0.2, cuatro curvas superpuestas.
- (
-\begin_inset Formula $f(x)$
+A continuación vemos la Figura 0.1, tres curvas de error de aproximación
+ superpuestas.
+ (3 aproximaciones dadas por FFNN típica con una capa oculta de 4 neuronas
+ de función de activación 
+\begin_inset Formula $tanh(x)$
 \end_inset
 
- y sus 3 aproximaciones)
+ y capa de salida lineal)
 \end_layout
 
 \begin_layout Standard
-\align center
+\noindent
 \begin_inset Float figure
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
+\noindent
 \align center
 \begin_inset Graphics
-	filename ../practico3-Perceptron/img/ejer2a.jpg
-	scale 60
+	filename img/ejer1/hypByTanh-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/hypByTanh-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
 
 \end_inset
 
@@ -518,58 +817,12 @@ status collapsed
 \begin_inset Caption
 
 \begin_layout Plain Layout
-Aproximación de 
+Error de aproximación a 
 \begin_inset Formula $f(x)=\frac{1}{X}$
 \end_inset
 
- por redes feedforward de una capa oculta, entrenadas con 
-\begin_inset Formula $5;10;20$
-\end_inset
-
- puntos
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Notamos que en general las aproximaciones son buenas excepto la aproximación
- hecha solo por 5 puntos de entrenamientos.
- En este caso vemos que la interpolación es buena pero la extrapolación
- no lo es.
- Lo apreciamos con mas detalle en las Figuras 0.3 y 0.4
-\begin_inset Float figure
-placement H
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../practico3-Perceptron/img/ejer2a1.jpg
-	scale 50
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-\begin_inset Formula $f(x)=\frac{1}{X}$
-\end_inset
-
-, aproximación por redes entrenadas con 5 y 10 puntos
+ por una red típica de 4 neuronas de capa oculta y salida lineal, entrenadas
+ con 5, 10 y 20 puntos.
 \end_layout
 
 \end_inset
@@ -583,17 +836,27 @@ status collapsed
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename ../practico3-Perceptron/img/ejer2a2.jpg
-	scale 50
+	filename img/ejer1/hypByHyp2-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/hypByHyp2-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
 
 \end_inset
 
@@ -604,10 +867,16 @@ status collapsed
 \begin_inset Caption
 
 \begin_layout Plain Layout
+Error de aproximación a 
 \begin_inset Formula $f(x)=\frac{1}{X}$
 \end_inset
 
-, aproximación por red entrenada con 20 puntos
+ por una red con una capa oculta de 4 neuronas con función de activación
+ 
+\begin_inset Formula $f_{act}(x)=\frac{1}{(x^{2}+0.005)}$
+\end_inset
+
+ y salida lineal, entrenadas con 5, 10 y 20 puntos.
 \end_layout
 
 \end_inset
@@ -618,6 +887,190 @@ status collapsed
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/ejer1/hypByLog2-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/hypByLog2-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Error de aproximación a 
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+ por una red con una capa oculta de 4 neuronas con función de activación
+ 
+\begin_inset Formula $f_{act}(x)=ln(x^{2}+0.05)$
+\end_inset
+
+ y salida lineal, entrenadas con 5, 10 y 20 puntos.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/ejer1/hypByAuto-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/hypByAuto-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Error de aproximación a 
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+ por una red obtenida de un algoritmo de construcción, con capa/s oculta/s
+ con función de activación 
+\begin_inset Formula $f_{act}(x)=tanh(x)$
+\end_inset
+
+ combinadas con neuronas lineales y salida lineal, entrenadas con 5, 10
+ y 20 puntos.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Podemos ver que las FFNN con capa oculta 
+\begin_inset Formula $f_{act}(x)=tanh(x)$
+\end_inset
+
+ sola y la FFNN con capa oculta 
+\begin_inset Formula $f_{act}(x)=\frac{1}{(x^{2}+0.005)}$
+\end_inset
+
+ aproximan mejor a la función 
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+ (Figura 0.1 y 0.2); en contraposición de las FFNN con capa oculta 
+\begin_inset Formula $f_{act}(x)=ln(x^{2}+0.05)$
+\end_inset
+
+ y con capa oculta mixta 
+\begin_inset Formula $f_{act}(x)=\left\{ tanh(x),lineal\right\} $
+\end_inset
+
+ (Figura 0.3 y 0.4).
+ Podemos suponer que las primeras aproximan mejor en el intervalo 
+\begin_inset Formula $\left[1.0;50.0\right]$
+\end_inset
+
+ ya que son acotadas y comparten que 
+\begin_inset Formula $\underset{x\rightarrow\infty}{lim}g(x)=C$
+\end_inset
+
+ con C finito.
+ Las otras no tienen cotas (
+\begin_inset Formula $f_{act}(x)=ln(x^{2}+0.05)$
+\end_inset
+
+ solo es acotada por debajo y no tiene limite finito cuando el dominio tiende
+ a 
+\begin_inset Formula $\infty$
+\end_inset
+
+ o 
+\begin_inset Formula $-\infty$
+\end_inset
+
+), por lo que al extrapolar, el error es cada vez mayor.
+\end_layout
+
+\begin_layout Standard
+Ninguna extrapola bien en el intervalo 
+\begin_inset Formula $\left[0.0;1.0\right]$
+\end_inset
+
+ (el error aumenta cuando nos acercamos a 0), podemos suponer que esto se
+ debe a que la función 
+\begin_inset Formula $f(x)=\frac{1}{X}$
+\end_inset
+
+ tiende a infinito cuando x tiende a cero y ninguna de las funciones de
+ activación puede aproximar eso, ya que el algoritmo de entrenamiento que
+ usamos (backpropagation) tiene como requerimiento que la función de activación
+ debe ser derivable en todo 
+\begin_inset Formula $\mathbb{R}$
+\end_inset
+
+.
+ Analizando un poco podemos decir que, las FFNN a las cuales entrenemos
+ con backpropagation, podremos usarlas para aproximar funciones discontinuas
+ hasta cierto punto, determinado por la cercanía de los puntos de entrenamiento
+ a el punto de discontinuidad.
+ Como comentario adicional, podemos decir que si quisiéremos utilizar funciones
+ de activación discontinuas para aproximar funciones discontinuas, podríamos
+ intentarlo, usando otros algoritmos de entrenamientos (como por ejemplo
+ algoritmos evolutivos o genéticos sobre FFNN)
 \end_layout
 
 \begin_layout Subsubsection*
@@ -629,12 +1082,14 @@ Aproximación de
 \end_layout
 
 \begin_layout Standard
-A continuación las Figuras 0.5, cuatro curvas superpuestas.
- (
-\begin_inset Formula $f(x)$
+A continuación vemos la Figura 0.5, tres curvas de error de aproximación
+ superpuestas.
+ (3 aproximaciones dadas por FFNN típica con una capa oculta de 6 neuronas
+ de función de activación 
+\begin_inset Formula $tanh(x)$
 \end_inset
 
- y sus 3 aproximaciones)
+ y capa de salida lineal)
 \end_layout
 
 \begin_layout Standard
@@ -643,13 +1098,22 @@ A continuación las Figuras 0.5, cuatro curvas superpuestas.
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename ../practico3-Perceptron/img/ejer2b.jpg
-	scale 60
+	filename img/ejer1/logByTanh-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/logByTanh-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
 
 \end_inset
 
@@ -660,15 +1124,564 @@ status collapsed
 \begin_inset Caption
 
 \begin_layout Plain Layout
+Error de aproximación a 
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+ por una red típica de 6 neuronas de capa oculta y salida lineal, entrenadas
+ con 5, 10 y 20 puntos.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+En la Figura 0.5 podemos ver que la aproximación es buena cerca de los puntos
+ entrenados y el error es más grande al alejarse.
+ De echo al alejarse de los puntos de entrenamiento el error se puede describir
+ por 
+\begin_inset Formula $\ln(x)$
+\end_inset
+
+, que es la propia función objetivo.
+ Esto se debe a que 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ esta acotada por arriba y por abajo y la función objetivo no.
+ 
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/ejer1/logByHyp2-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/logByHyp2-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Error de aproximación a 
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+ por una red con una capa oculta de 6 neuronas con función de activación
+ 
+\begin_inset Formula $f_{act}(x)=\frac{1}{(x^{2}+0.005)}$
+\end_inset
+
+ y salida lineal, entrenadas con 5, 10 y 20 puntos.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+En la figura 0.6 observamos lo mismo que en la figura 0.5.
+ Aquí además podemos notar que, a mayor cantidad de puntos de entrenamiento,
+ mejor es la interpolación y la extrapolación.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/ejer1/logByLog2-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/logByLog2-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Error de aproximación a 
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+ por una red con una capa oculta de 6 neuronas con función de activación
+ 
+\begin_inset Formula $f_{act}(x)=ln(x^{2}+0.05)$
+\end_inset
+
+ y salida lineal, entrenadas con 5, 10 y 20 puntos.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/ejer1/logByAuto-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer1/logByAuto-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Error de aproximación a 
+\begin_inset Formula $f(x)=\ln(x)$
+\end_inset
+
+ por una red obtenida de un algoritmo de construcción, con capa/s oculta/s
+ con función de activación 
+\begin_inset Formula $f_{act}(x)=tanh(x)$
+\end_inset
+
+ combinadas con neuronas lineales y salida lineal, entrenadas con 5, 10
+ y 20 puntos.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Podemos ver en la figura 0.7 que en el intervalo 
+\begin_inset Formula $\left[1.0;50.0\right]$
+\end_inset
+
+ aproxima por extrapolación con un error menor a los demás en comparación.
+ Por otro lado en la figura 0.8 a pesar de ser FFNN construidas específicamente
+ con distintas cantidades de neuronas en la capa oculta, para mejorar el
+ comportamiento en el entorno de interpolación, observamos que al extrapolar,
+ la aproximación, se ve fuertemente afectada por la neurona lineal presente
+ en la capa oculta, generando un error caracterizado por la función 
+\begin_inset Formula $err(x)\thickapprox\ln(x)-x$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
+Escenario 2: Aproximación de 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+En los inicios de la materia, vimos el 
+\begin_inset Quotes eld
+\end_inset
+
+¿Por / Para que usamos redes neuronales?
+\begin_inset Quotes erd
+\end_inset
+
+; dentro de las características veíamos que son tolerantes a errores, tienen
+ la capacidad de aprender y generalizar con poca información, etc; capacidades
+ que también vemos en biología en los seres con sistemas nerviosos.
+ Junto con esto, también vimos que (así como los seres vivos) no son muy
+ buenas o eficientes para hacer cálculos exactos (esa no es su finalidad).
+ Por lo que con este ejemplo no pretendo mostrar lo contrario.
+ La intención no es usar FFNN para multiplicar dos números.
+ Sin embargo este ejemplo es útil a fines ilustrativos, respecto del tema:
+ extrapolación con FFNN y como afecta la selección de la función de activación.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+¿Por que elegimos la función 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+?
+\end_layout
+
+\begin_layout Standard
+Básicamente porque vimos que se puede representar exactamente por una FFNN
+ de una capa oculta.
+\end_layout
+
+\begin_layout Standard
+Veamos que se puede escribir la 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ en términos de sumas de constantes y funciones un-arias (estructura general
+ característica de cualquier FFNN).
+\end_layout
+
+\begin_layout Standard
+Sabemos que la identidad 
+\begin_inset Formula $a^{2}-b^{2}=(a+b)*(a-b)$
+\end_inset
+
+ con 
+\begin_inset Formula $a,b\mathbb{\in R}$
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+Digamos que 
+\begin_inset Formula $x=a+b$
+\end_inset
+
+ y que 
+\begin_inset Formula $y=a-b$
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+Luego 
+\begin_inset Formula $x*y=(a+b)*(a-b)$
+\end_inset
+
+ ie.
+ 
+\begin_inset Formula $x*y=a^{2}-b^{2}$
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+Escribamos 
+\begin_inset Formula $a$
+\end_inset
+
+ en función de 
+\begin_inset Formula $x$
+\end_inset
+
+, lo mismo con 
+\begin_inset Formula $b$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $a=x-b$
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left[b=a-y\right]\equiv\left[b=\left(x-b\right)-y\right]\equiv\left[b=\frac{x-y}{2}\right]$
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+ie.
+ 
+\begin_inset Formula $\left[a=x-\frac{x-y}{2}\right]\equiv\left[a=\frac{x+y}{2}\right]$
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+por lo tanto 
+\begin_inset Formula $x*y=(\frac{x+y}{2})^{2}-(\frac{x-y}{2})^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+De aquí que podemos calcular exactamente 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ con una FFNN de una capa oculta de solo 2 neuronas, con función de activación
+ 
+\begin_inset Formula $f_{act}(x)=x^{2}$
+\end_inset
+
+ y capa de salida lineal.
+\end_layout
+
+\begin_layout Standard
+En teoría es posible, aunque en la practica (entrenando la FFNN con el algoritmo
+ backpropagation) no lo conseguí; pero si lo conseguí con una red FFNN con
+ 3 neuronas en la capa oculta.
+\end_layout
+
+\begin_layout Subsubsection*
 Aproximación de 
-\begin_inset Formula $f(x)=\ln(x)$
+\begin_inset Formula $f(x,y)=x*y$
 \end_inset
 
- por redes feedforward de una capa oculta, entrenadas con 
-\begin_inset Formula $5;10;20$
+
+\end_layout
+
+\begin_layout Standard
+Entrenamos sobre 10 puntos de la función 
+\begin_inset Formula $f(x,y)=x*y$
 \end_inset
 
- puntos
+ tomados aleatoriamente en el intervalo 
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+ en 
+\begin_inset Formula $\left(x;y\right)$
+\end_inset
+
+.
+ Imponiendo un limite 
+\begin_inset Formula $\epsilon=0.02$
+\end_inset
+
+ de tolerancia de error de aprendizaje por patrón.
+\end_layout
+
+\begin_layout Standard
+Aproximamos con las siguientes FFNN:
+\end_layout
+
+\begin_layout Itemize
+FFNN típica de una capa oculta con 12 neuronas con función de activación
+ 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ y capa de salida lineal.
+\end_layout
+
+\begin_layout Itemize
+FFNN con una capa oculta de 3 neuronas con funciones de activación 
+\begin_inset Formula $f_{act}(x)=x^{2}$
+\end_inset
+
+ y capa de salida lineal.
+\end_layout
+
+\begin_layout Itemize
+FFNN obtenida de un algoritmo de construcción, con una capa oculta con función
+ de activación 
+\begin_inset Formula $f_{act}(x)=tanh(x)$
+\end_inset
+
+ combinadas con neuronas lineales y salida lineal.
+ (El algoritmo dio como resultado solo una capa oculta de 110 neuronas)
+\end_layout
+
+\begin_layout Standard
+Como en el caso anterior haremos los gráficos de la diferencia 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang english
+
+\begin_inset Formula $g\left(x_{j},y_{j}\right)-\hat{g}\left(x_{j},y_{j}\right)$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang spanish
+ (erro de aproximación).
+ Donde 
+\begin_inset Formula $g\left(·\right)$
+\end_inset
+
+ es la función a aproximar por FFNN y 
+\begin_inset Formula $\hat{g}\left(·\right)$
+\end_inset
+
+ es la estimación de 
+\begin_inset Formula $g\left(·\right)$
+\end_inset
+
+ dada por FFNN; midiendo el error en el intervalo 
+\begin_inset Formula $\left[-100;100\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-100;100\right]$
+\end_inset
+
+ en 
+\begin_inset Formula $\left(x;y\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+A continuación vemos la Figura 0.9, las curvas de error de aproximación de
+ interpolación y extrapolación.
+ (aproximación dada por FFNN típica con una capa oculta de 12 neuronas de
+ función de activación 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ y capa de salida lineal)
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/ejer2/grapMultByTanh-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer2/grapMultByTanh-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Error de aproximación a 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ por FFNN típica con una capa oculta de 12 neuronas de función de activación
+ 
+\begin_inset Formula $tanh(x)$
+\end_inset
+
+ y capa de salida lineal, entrenada con 10 puntos en el intervalo 
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+.
 \end_layout
 
 \end_inset
@@ -682,20 +1695,27 @@ Aproximación de
 \end_layout
 
 \begin_layout Standard
-Podemos ver que la aproximación es buena cerca de los puntos entrenados
- y el error es más grande al alejarse.
- Apreciamos con más detalle en las Figuras 0.6 y 0.7
+\noindent
 \begin_inset Float figure
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename ../practico3-Perceptron/img/ejer2b1.jpg
-	scale 50
+	filename img/ejer2/grapMultByAuto-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer2/grapMultByAuto-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
 
 \end_inset
 
@@ -706,10 +1726,26 @@ status collapsed
 \begin_inset Caption
 
 \begin_layout Plain Layout
-\begin_inset Formula $f(x)=\ln(x)$
+Error de aproximación a 
+\begin_inset Formula $f(x,y)=x*y$
 \end_inset
 
-, aproximación por redes entrenadas con 5 y 10 puntos
+ por una FFNN obtenida de un algoritmo de construcción, con una capa oculta
+ con función de activación 
+\begin_inset Formula $f_{act}(x)=tanh(x)$
+\end_inset
+
+ combinadas con neuronas lineales y salida lineal.
+ (El algoritmo dio como resultado solo una capa oculta de 110 neuronas),
+ entrenada con 10 puntos en el intervalo 
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+.
 \end_layout
 
 \end_inset
@@ -723,17 +1759,71 @@ status collapsed
 \end_layout
 
 \begin_layout Standard
+\noindent
+En las figuras 0.9 y 0.10 podemos observar (en ambas) que la interpolación
+ de por si es mala, ya que las gráficas de error en el inérvalo 
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+ alcanza valores entre -100 a 120, siendo que 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ en ese rango alcanza esos valores y en los puntos de entrenamiento se pidió
+ una tolerancia limite de 
+\begin_inset Formula $\epsilon=0.02$
+\end_inset
+
+ (la cual se respeto, pero estos valores solo se dan en entornos muy cercanos
+ a los puntos de entrenamiento).
+\end_layout
+
+\begin_layout Standard
+\noindent
+En ambas gráficas de extrapolación vemos que el error es total.
+ (Error caracterizado por la función 
+\begin_inset Formula $err(x,y)\thickapprox x*y$
+\end_inset
+
+ que es la propia función objetivo.) Es decir, ninguna de las FFNN aproxima
+ a la función objetivo.
+\end_layout
+
+\begin_layout Standard
+A continuación veremos el error de aproximación por la red de una capa oculta
+ de 3 neuronas con función de activación 
+\begin_inset Formula $f_{act}(x)=x^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\noindent
 \begin_inset Float figure
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename ../practico3-Perceptron/img/ejer2b2.jpg
-	scale 50
+	filename img/ejer2/grapMultByPow2-1.jpg
+	scale 35
+	rotateOrigin leftBaseline
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/ejer2/grapMultByPow2-2.jpg
+	scale 35
+	rotateOrigin rightBaseline
 
 \end_inset
 
@@ -744,10 +1834,23 @@ status collapsed
 \begin_inset Caption
 
 \begin_layout Plain Layout
-\begin_inset Formula $f(x)=\ln(x)$
+Error de aproximación a 
+\begin_inset Formula $f(x,y)=x*y$
 \end_inset
 
-, aproximación por red entrenada con 20 puntos
+ por FFNN con una capa oculta de 3 neuronas de función de activación 
+\begin_inset Formula $f_{act}(x)=x^{2}$
+\end_inset
+
+ y capa de salida lineal, entrenada con 10 puntos en el intervalo 
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+.
 \end_layout
 
 \end_inset
@@ -755,6 +1858,62 @@ status collapsed
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Podemos ver que las FFNN con capa oculta 
+\begin_inset Formula $f_{act}(x)=x^{2}$
+\end_inset
+
+ interpola y extrapola muy bien toda la región.
+ Las gráficas de error en el intervalo 
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+ alcanza valores entre -0.05 a 0.2, siendo que 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ en ese rango alcanza valores entre -100 y 100 (error de interpolación en
+ 
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-10;10\right]$
+\end_inset
+
+ del %0.2).
+\end_layout
+
+\begin_layout Standard
+\noindent
+En la gráfica de extrapolación vemos que el error de extrapolación alcanza
+ valores entre -2 a 18, siendo que 
+\begin_inset Formula $f(x,y)=x*y$
+\end_inset
+
+ en ese rango alcanza valores entre -10000 y 10000 (error de extrapolación
+ en 
+\begin_inset Formula $\left[-100;100\right]$
+\end_inset
+
+;
+\begin_inset Formula $\left[-100;100\right]$
+\end_inset
+
+ del %0.18).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
 \end_inset
 
 
@@ -765,26 +1924,66 @@ Conclusiones
 \end_layout
 
 \begin_layout Enumerate
-Sobre el error de generalización.
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
 A medida que aumenta la cantidad elementos en el conjunto de entrenamiento
  vemos que el error se acerca más a 
 \begin_inset Formula $0$
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Enumerate
+En algunos casos, cuando la arquitectura de la red o la/s función/es de
+ activación de las neuronas no son apropiadas, se puede dar el efecto de
+ sobre entrenamiento, en donde la red aprende bien todos los valores de
+ entrenamiento, pero no interpola ni extrapola bien.
+\end_layout
+
+\begin_layout Enumerate
+La estructura de la red (en cuanto a cantidad de capas y numero de neuronas
+ por capa) pude ser determinante para la interpolación y una estructura
+ adecuada puede ayudar a tener un mejor entrenamiento para cierto conjunto
+ de entrenamiento; pero desde el punto de vista de la extrapolación, notamos
+ que la función de activación tiene un rol mucho mas significativo.
+\end_layout
+
+\begin_layout Enumerate
+El algoritmo backpropagation tiene limitaciones, como por ejemplo que con
+ FFNN entrenadas con dicho algoritmo, no podremos aproximar bien funciones
+ discontinuas cerca de puntos de discontinuidad.
+ (existen alternativas como los algoritmos evolutivos o geneticos aplicables
+ a FFNN)
+\end_layout
+
+\begin_layout Enumerate
+Notamos que en general las aproximaciones son buenas siempre y cuando los
+ datos del conjunto de entrenamiento, estén bien distribuidos en el espacio
+ objetivo que queremos representar.
+ En este caso vemos que la interpolación es buena pero la extrapolación
+ no siempre lo es.
+\end_layout
+
+\begin_layout Enumerate
+Mientras mas características comparten, la función resultante de la composición
+ de las funciones de activación de las distintas capas de la FFNN, con la
+ función objetivo:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Con pocos puntos de entrenamientos se puede lograr un buen nivel de interpolació
+n.
+\end_layout
+
+\begin_layout Enumerate
+La FFNN puede ser mas pequeña en cantidad de neuronas y seguir siendo buena
+ aproximación para la función objetivo.
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-Algo estudiado, pero que no vimos en el experimento es que en algunos casos,
- cuando la arquitectura de la red o la/s función/es de activación de las
- neuronas no son apropiadas, se puede dar el efecto de sobre entrenamiento,
- en donde la red aprende bien todos los valores de entrenamiento, pero no
- interpola ni extrapola bien.
+Mientras mas grande es la red, por lo genera mas fácil sera el entrenamiento
+ (dentro de parámetros razonables)
 \end_layout
 
 \end_inset
@@ -792,74 +1991,62 @@ Algo estudiado, pero que no vimos en el experimento es que en algunos casos,
 
 \end_layout
 
-\begin_layout Itemize
-(para el caso finito) A mayor porcentaje cubierto de las combinaciones de
- datos que definen la función a mapear por el conjunto de datos de entrenamiento
-, menor es el error general de la red.
-\end_layout
-
-\begin_layout Itemize
-El aprendizaje aplicando momento, resuelve algunos problemas de rebote y
- de aprendizaje lento, disminuyendo también el error de generalización.
+\begin_layout Enumerate
+Mejora significativamente el alcance de extrapolación, con un error menor.
 \end_layout
 
 \end_deeper
-\begin_layout Enumerate
-Para el caso de aproximar funciones continuas, notamos que en general las
- aproximaciones son buenas siempre y cuando los datos del conjunto de entrenamie
-nto, estén bien distribuidos en el espacio objetivo que queremos representar.
- En este caso vemos que la interpolación es buena pero la extrapolación
- no siempre lo es.
+\begin_layout Standard
 \begin_inset Newpage pagebreak
 \end_inset
 
 
 \end_layout
 
-\begin_layout Enumerate
-Cuando la cantidad de neuronas son apenas las suficientes para almacenar
- la información requerida
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Si no tiene la cantidad necesarias de neuronas para almacenar la información
- es de esperar que tome muchísimo más tiempo de entrenamiento y quizás nunca
- alcance el valor esperado, dentro del rango establecido por el error aceptable
- para los valores de entrenamiento.
-\end_layout
-
-\end_inset
-
-, podemos afirmar 2 cosas:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-El entrenamiento tomara más tiempo (iteraciones de entrenamiento) que si
- tuviese más neuronas.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Si las neuronas son demasiadas, el entrenamiento también tardara mucho en
- cuanto a tiempo de calculo ya que las matrices de pesos sinápticos serán
- más grandes.
-\end_layout
-
-\end_inset
-
-
+\begin_layout Part*
+Bibliografía
 \end_layout
 
 \begin_layout Itemize
-La red puede tener pesos sinápticos muy dispares y con valores absolutos
- muy grandes, lo que la puede hacer poco adaptable a cambios frente futuros
- entrenamientos.
- En redes con más capacidad de información (acorde a lo que se le quiera
- mapear), los valores de los pesos sinápticos son mucho más homogéneos.
+Introduction to the Theory of Neural Computation (Lecture Notes Vol 1) -
+ John Hertz, Anders Krogh, Richard G.
+ Palmer.
 \end_layout
 
-\end_deeper
+\begin_layout Itemize
+A New Strategy for adaptively Constructing Multilayer FeedForward Neural
+ Networks - L.
+ Ma, K.
+ Khorasani
+\end_layout
+
+\begin_layout Itemize
+Comparación del Desempeño de Funciones de Activación en Redes Feedforward
+ para aproximar Funciones de Datos con y sin Ruido - Luis Llano, MSc.(c)1,
+ Andrés Hoyos, Est.2, Francisco Arias, Est.2, Juan Velásquez, PhD.(c)3 1 Interconex
+ión Eléctrica S.A.
+ E.S.P.
+ (ISA), Colombia 2 GIDIA: Grupo de Investigación y Desarrollo en Inteligencia
+ Artificial 3 Grupo de Finanzas Computacionales Escuela de Ingeniería de
+ Sistemas, Facultad de Minas Universidad Nacional de Colombia Sede Medellín
+ 
+\end_layout
+
+\begin_layout Itemize
+http://bluetiger.bauchlandung.org/other/annea/
+\end_layout
+
+\begin_layout Itemize
+http://en.wikipedia.org/wiki/Feedforward_neural_network
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
 \end_body
 \end_document
